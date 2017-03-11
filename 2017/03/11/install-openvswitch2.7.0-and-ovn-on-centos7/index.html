@@ -3,17 +3,30 @@
 <head>
   <meta charset="utf-8">
   
-  <title>faicker&#39;s个人博客</title>
+  <title>install openvswitch 2.7.0 and ovn on centos 7 | faicker&#39;s个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="network | linux | virt">
-<meta property="og:type" content="website">
-<meta property="og:title" content="faicker's个人博客">
-<meta property="og:url" content="http://faicker.github.io/index.html">
+  <meta name="description" content="前言主要参考此安装文档 http://docs.openvswitch.org/en/latest/intro/install/fedora/不过此文档只适用于fedora。
+rpm编译在centos7上编译过程如下：
+
+安装依赖包
+ 1yum install rpm-build autoconf automake libtool systemd-units openssl openssl-dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="install openvswitch 2.7.0 and ovn on centos 7">
+<meta property="og:url" content="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
-<meta property="og:description" content="network | linux | virt">
+<meta property="og:description" content="前言主要参考此安装文档 http://docs.openvswitch.org/en/latest/intro/install/fedora/不过此文档只适用于fedora。
+rpm编译在centos7上编译过程如下：
+
+安装依赖包
+ 1yum install rpm-build autoconf automake libtool systemd-units openssl openssl-dev">
+<meta property="og:updated_time" content="2017-03-11T04:25:40.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="faicker's个人博客">
-<meta name="twitter:description" content="network | linux | virt">
+<meta name="twitter:title" content="install openvswitch 2.7.0 and ovn on centos 7">
+<meta name="twitter:description" content="前言主要参考此安装文档 http://docs.openvswitch.org/en/latest/intro/install/fedora/不过此文档只适用于fedora。
+rpm编译在centos7上编译过程如下：
+
+安装依赖包
+ 1yum install rpm-build autoconf automake libtool systemd-units openssl openssl-dev">
   
     <link rel="alternate" href="/atom.xml" title="faicker&#39;s个人博客" type="application/atom+xml">
   
@@ -66,9 +79,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-install-openvswitch2.7.0-and-ovn-on-centos7" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-install-openvswitch2.7.0-and-ovn-on-centos7" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" class="article-date">
   <time datetime="2017-03-11T03:55:00.000Z" itemprop="datePublished">2017-03-11</time>
@@ -85,8 +96,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/">install openvswitch 2.7.0 and ovn on centos 7</a>
+    <h1 class="article-title" itemprop="name">
+      install openvswitch 2.7.0 and ovn on centos 7
     </h1>
   
 
@@ -140,178 +151,26 @@
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-enable-trim-of-yosemite" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/10/19/enable-trim-of-yosemite/" class="article-date">
-  <time datetime="2014-10-19T12:47:41.000Z" itemprop="datePublished">2014-10-19</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Mac-OS-X/">Mac OS X</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/10/19/enable-trim-of-yosemite/">enable trim of yosemite</a>
-    </h1>
+    <a href="/2014/10/19/enable-trim-of-yosemite/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">enable trim of yosemite</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>步骤在这里，<a href="https://gist.github.com/return1/4058659" target="_blank" rel="external">https://gist.github.com/return1/4058659</a></p>
-<p><code>yosemite</code>, <code>MBP 2011 early</code>，三星<code>ssd 840 evo</code>亲测开启成功。</p>
-<p>命令一句一句贴到<code>terminal</code>里执行。中间会重启2次。</p>
-<p><code>yosemite</code>里有一个新的安全设置<code>kext signing</code>。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。<br>现在的方法是关闭<code>kext signing</code>机制，这个配置是存在<code>NVRAM/PRAM</code>的。关闭全局<code>kext signing</code>是有安全风险的。</p>
-<p>开启成功后，如果以后重置了<code>NVRAM/PRAM</code>，会导致开不了机，切记。所以在重置前，需要先关闭<code>trim</code>。</p>
-<p>详细的参考，包括开机报错怎么回退，</p>
-<ul>
-<li><a href="http://www.cindori.org/trim-enabler-and-yosemite/" target="_blank" rel="external">http://www.cindori.org/trim-enabler-and-yosemite/</a></li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/" data-id="cj04r0v5j00000taosmdsomf4" class="article-share-link">Share</a>
-      
-        <a href="http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/#disqus_thread" class="article-comment-link">留言</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Mac-OS-X/">Mac OS X</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/trim/">trim</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yosemite/">yosemite</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
 
 
-  
-    <article id="post-generate-uml-of-python-code-with-pylint-pyreverse" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" class="article-date">
-  <time datetime="2014-09-21T14:39:42.000Z" itemprop="datePublished">2014-09-21</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/python/">python</a>
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
   </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/">用pylint(pyreverse)生成python代码的uml类图</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>##pyreverse<br><code>pyreverse</code>能方便的生成uml类图，<code>pylint</code>里自带了<code>pyreverse</code>这个工具。</p>
-<p>###安装</p>
-<ol>
-<li>先安装graphviz</li>
-<li>pip install pylint</li>
-</ol>
-<p>###使用<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer</div></pre></td></tr></table></figure></p>
-<p>###图片示例<br>
-        
-          <p class="article-more-link">
-            <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" data-id="cj04r0v6300070taoxczt5zth" class="article-share-link">Share</a>
-      
-        <a href="http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#disqus_thread" class="article-comment-link">留言</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pylint/">pylint</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/uml/">uml</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-用nginx和heroku实现一个免费的http-proxy" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" class="article-date">
-  <time datetime="2014-09-14T15:24:03.000Z" itemprop="datePublished">2014-09-14</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/proxy/">proxy</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/">用nginx和heroku实现一个免费的http proxy</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。</p>
-<p>首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如<code>xxx.herokuapp.com</code>，同时还支持SSL访问，这个是关键。</p>
-<p>heroku的app不能直接用作代理，因为访问heroku app大概路径是，<br><code>xxx.herokuapp.com</code>解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404  Object Not Found。</p>
-<p>思路是，</p>
-<p>把要访问的网站嵌入到url里，比如<code>http://xxx.herokuapp.com/p/www.google.com</code>，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问<code>http://xxx.herokuapp.com/p/www.google.com</code>返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。</p>
-<p>为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单）</p>
-<p>最后在浏览器里配置一下http proxy就行了。</p>
-<p>PS,</p>
-<p>heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。</p>
-<p>最后奉上nginx的配置和示例代码：<br>
-        
-          <p class="article-more-link">
-            <a href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" data-id="cj04r0v5y00060taocwv6cx7h" class="article-share-link">Share</a>
-      
-        <a href="http://faicker.github.io/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#disqus_thread" class="article-comment-link">留言</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/heroku/">heroku</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/http-proxy/">http proxy</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nginx/">nginx</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
+</section>
 </section>
         
           <aside id="sidebar">
@@ -406,11 +265,13 @@
 <script>
   var disqus_shortname = 'faicker';
   
+  var disqus_url = 'http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/';
+  
   (function(){
     var dsq = document.createElement('script');
     dsq.type = 'text/javascript';
     dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/count.js';
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   })();
 </script>
