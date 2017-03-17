@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+
+    
+    
+    
+  <url>
+    <loc>http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/</loc>
+    <lastmod>2017-03-11T04:33:07.000Z</lastmod>
+    <data>
+        <display>
+        <title>用pylint(pyreverse)生成python代码的uml类图</title>
+        <pubTime>2014-09-21T14:39:42.000Z</pubTime>
+        
+        <tag>python</tag>
+         
+        <tag>uml</tag>
+         
+        <tag>pylint</tag>
+         
+         
+           
+             
+              <breadCrumb title="python" url="http://faicker.github.io/categories/python/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/</loc>
+    <lastmod>2017-03-11T04:31:30.000Z</lastmod>
+    <data>
+        <display>
+        <title>install openvswitch 2.7.0 and ovn on centos 7</title>
+        <pubTime>2017-03-11T03:55:00.000Z</pubTime>
+        
+        <tag>openvswitch</tag>
+         
+        <tag>ovn</tag>
+         
+        <tag>centos7</tag>
+         
+         
+           
+             
+              <breadCrumb title="openvswitch" url="http://faicker.github.io/categories/openvswitch/"/>
+          
+             
+              <breadCrumb title="ovn" url="http://faicker.github.io/categories/openvswitch/ovn/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://faicker.github.io/2014/09/14/%E7%94%A8nginx%E5%92%8Cheroku%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%85%8D%E8%B4%B9%E7%9A%84http-proxy/</loc>
+    <lastmod>2017-03-11T02:35:59.000Z</lastmod>
+    <data>
+        <display>
+        <title>用nginx和heroku实现一个免费的http proxy</title>
+        <pubTime>2014-09-14T15:24:03.000Z</pubTime>
+        
+        <tag>nginx</tag>
+         
+        <tag>heroku</tag>
+         
+        <tag>http proxy</tag>
+         
+         
+           
+             
+              <breadCrumb title="proxy" url="http://faicker.github.io/categories/proxy/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/</loc>
+    <lastmod>2017-03-11T02:10:48.000Z</lastmod>
+    <data>
+        <display>
+        <title>enable trim of yosemite</title>
+        <pubTime>2014-10-19T12:47:41.000Z</pubTime>
+        
+        <tag>Mac OS X</tag>
+         
+        <tag>trim</tag>
+         
+        <tag>yosemite</tag>
+         
+         
+           
+             
+              <breadCrumb title="Mac OS X" url="http://faicker.github.io/categories/Mac-OS-X/"/>
+          
+        </display>
+    </data>
+    </url>
+
+</urlset>
