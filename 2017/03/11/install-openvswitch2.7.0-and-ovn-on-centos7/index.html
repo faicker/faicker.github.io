@@ -19,7 +19,7 @@ rpm编译在centos7上编译过程如下：
 
 安装依赖包
  1yum install rpm-build autoconf automake libtool systemd-units openssl openssl-dev">
-<meta property="og:updated_time" content="2017-03-11T04:25:40.000Z">
+<meta property="og:updated_time" content="2017-03-11T04:31:30.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="install openvswitch 2.7.0 and ovn on centos 7">
 <meta name="twitter:description" content="前言主要参考此安装文档 http://docs.openvswitch.org/en/latest/intro/install/fedora/不过此文档只适用于fedora。
@@ -117,23 +117,25 @@ rpm编译在centos7上编译过程如下：
 <li><p>如果要支持ovs-dpdk，</p>
 <ul>
 <li>安装dpdk 16.11，rpm包地址 <a href="[https://cbs.centos.org/koji/buildinfo?buildID=15283">https://cbs.centos.org/koji/buildinfo?buildID=15283</a></li>
-<li><figure class="highlight plain"><figcaption><span>install numactl-devel libpcap-devel```</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">3. 初始化环境</div><div class="line"></div><div class="line">	```bash</div><div class="line">tar xf openvswitch-2.7.0.tar.gz</div><div class="line">cd openvswitch-2.7.0</div><div class="line">./boot.sh</div><div class="line">./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc</div></pre></td></tr></table></figure>
+<li><code>yum install numactl-devel libpcap-devel</code></li>
+</ul>
+</li>
+<li><p>初始化环境</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tar xf openvswitch-2.7.0.tar.gz</div><div class="line"><span class="built_in">cd</span> openvswitch-2.7.0</div><div class="line">./boot.sh</div><div class="line">./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc</div></pre></td></tr></table></figure>
+</li>
+<li><p>生成用户态rpm包，</p>
+<ul>
+<li><p>如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora RPMBUILD_OPT=<span class="string">"--with dpdk --without check"</span></div></pre></td></tr></table></figure>
 </li>
 </ul>
 </li>
-<li><p>生成用户态rpm包，</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora RPMBUILD_OPT=<span class="string">"--with dpdk --without check"</span></div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。</p>
-<ol>
 <li><p>生成内核态rpm包，</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora-kmod</div></pre></td></tr></table></figure>
 </li>
 </ol>
 <p>生成的包在<code>rpm/rpmbuild/RPMS</code>下，包括ovn相关的。如果只想体验ovs，安装<code>openvswitch-2.7.0-1.el7.centos.x86_64.rpm</code>和<code>openvswitch-kmod-2.7.0-1.el7.centos.x86_64.rpm</code>即可。</p>
-<p>###rpm安装时的注意事项</p>
-<ul>
+<h3 id="rpm安装时的注意事项"><a href="#rpm安装时的注意事项" class="headerlink" title="rpm安装时的注意事项"></a>rpm安装时的注意事项</h3><ul>
 <li>如果安装rpm时，提示没有依赖包<code>python2-six/python2-twisted/python2-zope-interface</code>，加参数<code>--nodep</code>跳过依赖（前面其实已经安装了<code>python-six</code>等）</li>
 <li><code>openvswitch-ovn</code>依赖<code>firewalld-filesystem</code>，通过<code>yum install firewalld-filesystem</code>安装。</li>
 </ul>
@@ -141,7 +143,7 @@ rpm编译在centos7上编译过程如下：
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" data-id="cj04r0v5q00020taodw825q59" class="article-share-link">Share</a>
+      <a data-url="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" data-id="cj0dwsw7w000bghao49wc4frk" class="article-share-link">Share</a>
       
         <a href="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/#disqus_thread" class="article-comment-link">留言</a>
       

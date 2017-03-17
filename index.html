@@ -106,23 +106,25 @@
 <li><p>如果要支持ovs-dpdk，</p>
 <ul>
 <li>安装dpdk 16.11，rpm包地址 <a href="[https://cbs.centos.org/koji/buildinfo?buildID=15283">https://cbs.centos.org/koji/buildinfo?buildID=15283</a></li>
-<li><figure class="highlight plain"><figcaption><span>install numactl-devel libpcap-devel```</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">3. 初始化环境</div><div class="line"></div><div class="line">	```bash</div><div class="line">tar xf openvswitch-2.7.0.tar.gz</div><div class="line">cd openvswitch-2.7.0</div><div class="line">./boot.sh</div><div class="line">./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc</div></pre></td></tr></table></figure>
+<li><code>yum install numactl-devel libpcap-devel</code></li>
+</ul>
+</li>
+<li><p>初始化环境</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tar xf openvswitch-2.7.0.tar.gz</div><div class="line"><span class="built_in">cd</span> openvswitch-2.7.0</div><div class="line">./boot.sh</div><div class="line">./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc</div></pre></td></tr></table></figure>
+</li>
+<li><p>生成用户态rpm包，</p>
+<ul>
+<li><p>如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora RPMBUILD_OPT=<span class="string">"--with dpdk --without check"</span></div></pre></td></tr></table></figure>
 </li>
 </ul>
 </li>
-<li><p>生成用户态rpm包，</p>
- <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora RPMBUILD_OPT=<span class="string">"--with dpdk --without check"</span></div></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。</p>
-<ol>
 <li><p>生成内核态rpm包，</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora-kmod</div></pre></td></tr></table></figure>
 </li>
 </ol>
 <p>生成的包在<code>rpm/rpmbuild/RPMS</code>下，包括ovn相关的。如果只想体验ovs，安装<code>openvswitch-2.7.0-1.el7.centos.x86_64.rpm</code>和<code>openvswitch-kmod-2.7.0-1.el7.centos.x86_64.rpm</code>即可。</p>
-<p>###rpm安装时的注意事项</p>
-<ul>
+<h3 id="rpm安装时的注意事项"><a href="#rpm安装时的注意事项" class="headerlink" title="rpm安装时的注意事项"></a>rpm安装时的注意事项</h3><ul>
 <li>如果安装rpm时，提示没有依赖包<code>python2-six/python2-twisted/python2-zope-interface</code>，加参数<code>--nodep</code>跳过依赖（前面其实已经安装了<code>python-six</code>等）</li>
 <li><code>openvswitch-ovn</code>依赖<code>firewalld-filesystem</code>，通过<code>yum install firewalld-filesystem</code>安装。</li>
 </ul>
@@ -130,7 +132,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" data-id="cj04r0v5q00020taodw825q59" class="article-share-link">Share</a>
+      <a data-url="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" data-id="cj0dwsw7w000bghao49wc4frk" class="article-share-link">Share</a>
       
         <a href="http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/#disqus_thread" class="article-comment-link">留言</a>
       
@@ -183,7 +185,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/" data-id="cj04r0v5j00000taosmdsomf4" class="article-share-link">Share</a>
+      <a data-url="http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/" data-id="cj0dwsw6q0000ghaox1c84i8h" class="article-share-link">Share</a>
       
         <a href="http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/#disqus_thread" class="article-comment-link">留言</a>
       
@@ -223,14 +225,13 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>##pyreverse<br><code>pyreverse</code>能方便的生成uml类图，<code>pylint</code>里自带了<code>pyreverse</code>这个工具。</p>
-<p>###安装</p>
-<ol>
+        <h2 id="pyreverse"><a href="#pyreverse" class="headerlink" title="pyreverse"></a>pyreverse</h2><p><code>pyreverse</code>能方便的生成uml类图，<code>pylint</code>里自带了<code>pyreverse</code>这个工具。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
 <li>先安装graphviz</li>
 <li>pip install pylint</li>
 </ol>
-<p>###使用<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer</div></pre></td></tr></table></figure></p>
-<p>###图片示例<br>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer</div></pre></td></tr></table></figure>
+<h3 id="图片示例"><a href="#图片示例" class="headerlink" title="图片示例"></a>图片示例</h3>
         
           <p class="article-more-link">
             <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#more">Read More</a>
@@ -239,7 +240,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" data-id="cj04r0v6300070taoxczt5zth" class="article-share-link">Share</a>
+      <a data-url="http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" data-id="cj0dwsw89000fghaorwy3328f" class="article-share-link">Share</a>
       
         <a href="http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#disqus_thread" class="article-comment-link">留言</a>
       
@@ -297,7 +298,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://faicker.github.io/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" data-id="cj04r0v5y00060taocwv6cx7h" class="article-share-link">Share</a>
+      <a data-url="http://faicker.github.io/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" data-id="cj0dwsw81000cghaop05m1cqu" class="article-share-link">Share</a>
       
         <a href="http://faicker.github.io/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#disqus_thread" class="article-comment-link">留言</a>
       
