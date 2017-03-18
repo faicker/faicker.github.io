@@ -6,7 +6,7 @@
     
     
   <url>
-    <loc>http://faicker.github.io/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/</loc>
+    <loc>http://blog.motitan.com/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/</loc>
     <lastmod>2017-03-11T04:33:07.000Z</lastmod>
     <data>
         <display>
@@ -22,7 +22,7 @@
          
            
              
-              <breadCrumb title="python" url="http://faicker.github.io/categories/python/"/>
+              <breadCrumb title="python" url="http://blog.motitan.com/categories/python/"/>
           
         </display>
     </data>
@@ -30,7 +30,7 @@
 
     
   <url>
-    <loc>http://faicker.github.io/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/</loc>
+    <loc>http://blog.motitan.com/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/</loc>
     <lastmod>2017-03-11T04:31:30.000Z</lastmod>
     <data>
         <display>
@@ -46,10 +46,10 @@
          
            
              
-              <breadCrumb title="openvswitch" url="http://faicker.github.io/categories/openvswitch/"/>
+              <breadCrumb title="openvswitch" url="http://blog.motitan.com/categories/openvswitch/"/>
           
              
-              <breadCrumb title="ovn" url="http://faicker.github.io/categories/openvswitch/ovn/"/>
+              <breadCrumb title="ovn" url="http://blog.motitan.com/categories/openvswitch/ovn/"/>
           
         </display>
     </data>
@@ -57,7 +57,7 @@
 
     
   <url>
-    <loc>http://faicker.github.io/2014/09/14/%E7%94%A8nginx%E5%92%8Cheroku%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%85%8D%E8%B4%B9%E7%9A%84http-proxy/</loc>
+    <loc>http://blog.motitan.com/2014/09/14/%E7%94%A8nginx%E5%92%8Cheroku%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%85%8D%E8%B4%B9%E7%9A%84http-proxy/</loc>
     <lastmod>2017-03-11T02:35:59.000Z</lastmod>
     <data>
         <display>
@@ -73,7 +73,7 @@
          
            
              
-              <breadCrumb title="proxy" url="http://faicker.github.io/categories/proxy/"/>
+              <breadCrumb title="proxy" url="http://blog.motitan.com/categories/proxy/"/>
           
         </display>
     </data>
@@ -81,7 +81,7 @@
 
     
   <url>
-    <loc>http://faicker.github.io/2014/10/19/enable-trim-of-yosemite/</loc>
+    <loc>http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/</loc>
     <lastmod>2017-03-11T02:10:48.000Z</lastmod>
     <data>
         <display>
@@ -97,7 +97,7 @@
          
            
              
-              <breadCrumb title="Mac OS X" url="http://faicker.github.io/categories/Mac-OS-X/"/>
+              <breadCrumb title="Mac OS X" url="http://blog.motitan.com/categories/Mac-OS-X/"/>
           
         </display>
     </data>

@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /archives/ 
+
+Disallow: /js/
+Disallow: /css/
+Disallow: /fonts/
+Disallow: /vendors/
+Disallow: /fancybox/
+Disallow: /baidu_verify_wtDZsmIFkr.html
+Disallow: /googlea46101c713ab44ff.html
+
+Sitemap: http://blog.motitan.com/sitemap.xml
+Sitemap: http://blog.motitan.com/baidusitemap.xml
