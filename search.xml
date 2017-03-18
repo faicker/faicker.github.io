@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+    
+    <entry>
+      <title><![CDATA[install openvswitch 2.7.0 and ovn on centos 7]]></title>
+      <url>%2F2017%2F03%2F11%2Finstall-openvswitch2.7.0-and-ovn-on-centos7%2F</url>
+      <content type="text"><![CDATA[前言主要参考此安装文档 http://docs.openvswitch.org/en/latest/intro/install/fedora/不过此文档只适用于fedora。 rpm编译在centos7上编译过程如下： 安装依赖包 1yum install rpm-build autoconf automake libtool systemd-units openssl openssl-devel python-devel groff graphviz desktop-file-utils python-twisted python-zope-interface python-six procps-ng checkpolicy selinux-policy-devel libcap-ng libcap-ng-devel 安装额外的依赖包python3-devel。 12rpm -ivh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpmyum install python3-devel 如果要支持ovs-dpdk， 安装dpdk 16.11，rpm包地址 https://cbs.centos.org/koji/buildinfo?buildID=15283 yum install numactl-devel libpcap-devel 初始化环境 1234tar xf openvswitch-2.7.0.tar.gzcd openvswitch-2.7.0./boot.sh./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc 生成用户态rpm包， 如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。 1make rpm-fedora RPMBUILD_OPT="--with dpdk --without check" 生成内核态rpm包， 1make rpm-fedora-kmod 生成的包在rpm/rpmbuild/RPMS下，包括ovn相关的。如果只想体验ovs，安装openvswitch-2.7.0-1.el7.centos.x86_64.rpm和openvswitch-kmod-2.7.0-1.el7.centos.x86_64.rpm即可。 rpm安装时的注意事项 如果安装rpm时，提示没有依赖包python2-six/python2-twisted/python2-zope-interface，加参数--nodep跳过依赖（前面其实已经安装了python-six等） openvswitch-ovn依赖firewalld-filesystem，通过yum install firewalld-filesystem安装。]]></content>
+    </entry>
+
+    
+    <entry>
+      <title><![CDATA[enable trim of yosemite]]></title>
+      <url>%2F2014%2F10%2F19%2Fenable-trim-of-yosemite%2F</url>
+      <content type="text"><![CDATA[步骤在这里，https://gist.github.com/return1/4058659 yosemite, MBP 2011 early，三星ssd 840 evo亲测开启成功。 命令一句一句贴到terminal里执行。中间会重启2次。 yosemite里有一个新的安全设置kext signing。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。现在的方法是关闭kext signing机制，这个配置是存在NVRAM/PRAM的。关闭全局kext signing是有安全风险的。 开启成功后，如果以后重置了NVRAM/PRAM，会导致开不了机，切记。所以在重置前，需要先关闭trim。 详细的参考，包括开机报错怎么回退， http://www.cindori.org/trim-enabler-and-yosemite/]]></content>
+    </entry>
+
+    
+    <entry>
+      <title><![CDATA[用pylint(pyreverse)生成python代码的uml类图]]></title>
+      <url>%2F2014%2F09%2F21%2Fgenerate-uml-of-python-code-with-pylint-pyreverse%2F</url>
+      <content type="text"><![CDATA[pyreversepyreverse能方便的生成uml类图，pylint里自带了pyreverse这个工具。 安装 先安装graphviz pip install pylint 使用1pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer 图片示例]]></content>
+    </entry>
+
+    
+    <entry>
+      <title><![CDATA[用nginx和heroku实现一个免费的http proxy]]></title>
+      <url>%2F2014%2F09%2F14%2F%E7%94%A8nginx%E5%92%8Cheroku%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%85%8D%E8%B4%B9%E7%9A%84http-proxy%2F</url>
+      <content type="text"><![CDATA[用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。 首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如xxx.herokuapp.com，同时还支持SSL访问，这个是关键。 heroku的app不能直接用作代理，因为访问heroku app大概路径是，xxx.herokuapp.com解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404 Object Not Found。 思路是， 把要访问的网站嵌入到url里，比如http://xxx.herokuapp.com/p/www.google.com，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问http://xxx.herokuapp.com/p/www.google.com返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。 为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单） 最后在浏览器里配置一下http proxy就行了。 PS, heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。 最后奉上nginx的配置和示例代码：nginx server段配置如下，其他省略， 1234567server &#123; listen 8080; location / &#123; resolver 223.5.5.5; proxy_pass https://xxx.herokuapp.com/p/$http_host$uri$is_args$args; &#125;&#125; app.py用的flask（网络上搜索到的一个例子改了一点，用其他也是OK的） cat Procfile 1web: python app.py cat requirements.txt（flask已经有新版本了） 12345Flask==0.9Jinja2==2.6Werkzeug==0.8.3wsgiref==0.1.2requests==2.3.0 cat app.py 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293"""A simple proxy server. Usage:http://hostname:port/p/(URL to be proxied, minus protocol)For example:http://localhost:8080/p/www.google.com"""import osfrom flask import Flask, render_template, request, abort, Response, redirectfrom werkzeug.serving import WSGIRequestHandlerimport requestsimport loggingapp = Flask(__name__.split('.')[0])logging.basicConfig(level=logging.INFO)LOG = logging.getLogger("main.py")@app.route('/&lt;path:url&gt;')def root(url): LOG.info("Root route, path: %s", url) # If referred from a proxy request, then redirect to a URL with the proxy prefix. # This allows server-relative and protocol-relative URLs to work. proxy_ref = proxy_ref_info(request) if proxy_ref: redirect_url = "%s/%s%s" % (proxy_ref[0], url, ("?" + request.query_string if request.query_string else "")) LOG.info("Redirecting referred URL to: %s", redirect_url) return proxy(redirect_url) abort(404)@app.route('/p/&lt;path:url&gt;')def proxy(url): """Fetches the specified URL and streams it out to the client. If the request was referred by the proxy itself (e.g. this is an image fetch for a previously proxied HTML page), then the original Referer is passed.""" r = get_source_rsp(url) LOG.info("Got %s response from %s",r.status_code, url) headers = dict(r.headers) if headers.has_key('transfer-encoding'): del(headers['transfer-encoding']) if headers.has_key('content-encoding'): del(headers['content-encoding']) return Response(r.content, headers = headers)def get_source_rsp(url): url = 'http://%s' % url LOG.info("Fetching %s", url) # Pass original Referer for subsequent resource requests proxy_ref = proxy_ref_info(request) headers = &#123; "Referer" : "http://%s/%s" % (proxy_ref[0], proxy_ref[1])&#125; if proxy_ref else &#123;&#125; # Fetch the URL, and stream it back LOG.info("Fetching with headers: %s, %s", url, headers) return requests.get(url, stream=False, params = request.args, headers=headers)def split_url(url): """Splits the given URL into a tuple of (protocol, host, uri)""" proto, rest = url.split(':', 1) rest = rest[2:].split('/', 1) host, uri = (rest[0], rest[1]) if len(rest) == 2 else (rest[0], "") return (proto, host, uri)def proxy_ref_info(request): """Parses out Referer info indicating the request is from a previously proxied page. For example, if: Referer: http://localhost:8080/p/google.com/search?q=foo then the result is: ("google.com", "search?q=foo") """ ref = request.headers.get('referer') if ref: _, _, uri = split_url(ref) if uri.find("/") &lt; 0: return None first, rest = uri.split("/", 1) if first in "pd": parts = rest.split("/", 1) r = (parts[0], parts[1]) if len(parts) == 2 else (parts[0], "") LOG.info("Referred by proxy host, uri: %s, %s", r[0], r[1]) return r return None@app.route('/')def hello(): return 'Hello World!'if __name__ == '__main__': # Bind to PORT if defined, otherwise default to 5000. port = int(os.environ.get('PORT', 5000)) WSGIRequestHandler.protocol_version = "HTTP/1.1" app.run(host='0.0.0.0', port=port, threaded=True)]]></content>
+    </entry>
+
+    
+  
+  
+</search>
