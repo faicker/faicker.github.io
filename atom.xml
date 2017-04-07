@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>faicker&#39;s个人博客</title>
+  <subtitle>关注云计算，网络虚拟化</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://blog.motitan.com/"/>
+  <updated>2017-03-11T04:31:30.000Z</updated>
+  <id>http://blog.motitan.com/</id>
+  
+  <author>
+    <name>faicker</name>
+    <email>faicker.mo@gmail.com</email>
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>install openvswitch 2.7.0 and ovn on centos 7</title>
+    <link href="http://blog.motitan.com/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/"/>
+    <id>http://blog.motitan.com/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/</id>
+    <published>2017-03-11T03:55:00.000Z</published>
+    <updated>2017-03-11T04:31:30.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>主要参考此安装文档 <a href="http://docs.openvswitch.org/en/latest/intro/install/fedora/" target="_blank" rel="external">http://docs.openvswitch.org/en/latest/intro/install/fedora/</a><br>不过此文档只适用于fedora。</p>
+<h3 id="rpm编译"><a href="#rpm编译" class="headerlink" title="rpm编译"></a>rpm编译</h3><p>在centos7上编译过程如下：</p>
+<ol>
+<li><p>安装依赖包</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install rpm-build autoconf automake libtool systemd-units openssl openssl-devel python-devel groff graphviz desktop-file-utils python-twisted python-zope-interface python-six procps-ng checkpolicy selinux-policy-devel libcap-ng libcap-ng-devel</div></pre></td></tr></table></figure>
+</li>
+<li><p>安装额外的依赖包python3-devel。</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">rpm -ivh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm</div><div class="line">yum install python3-devel</div></pre></td></tr></table></figure>
+</li>
+<li><p>如果要支持ovs-dpdk，</p>
+<ul>
+<li>安装dpdk 16.11，rpm包地址 <a href="[https://cbs.centos.org/koji/buildinfo?buildID=15283">https://cbs.centos.org/koji/buildinfo?buildID=15283</a></li>
+<li><code>yum install numactl-devel libpcap-devel</code></li>
+</ul>
+</li>
+<li><p>初始化环境</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tar xf openvswitch-2.7.0.tar.gz</div><div class="line"><span class="built_in">cd</span> openvswitch-2.7.0</div><div class="line">./boot.sh</div><div class="line">./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc</div></pre></td></tr></table></figure>
+</li>
+<li><p>生成用户态rpm包，</p>
+<ul>
+<li><p>如果不需要dpdk，把–with dpdk去掉。同时，这里去掉了测试。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora RPMBUILD_OPT=<span class="string">"--with dpdk --without check"</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>生成内核态rpm包，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">make rpm-fedora-kmod</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>生成的包在<code>rpm/rpmbuild/RPMS</code>下，包括ovn相关的。如果只想体验ovs，安装<code>openvswitch-2.7.0-1.el7.centos.x86_64.rpm</code>和<code>openvswitch-kmod-2.7.0-1.el7.centos.x86_64.rpm</code>即可。</p>
+<h3 id="rpm安装时的注意事项"><a href="#rpm安装时的注意事项" class="headerlink" title="rpm安装时的注意事项"></a>rpm安装时的注意事项</h3><ul>
+<li>如果安装rpm时，提示没有依赖包<code>python2-six/python2-twisted/python2-zope-interface</code>，加参数<code>--nodep</code>跳过依赖（前面其实已经安装了<code>python-six</code>等）</li>
+<li><code>openvswitch-ovn</code>依赖<code>firewalld-filesystem</code>，通过<code>yum install firewalld-filesystem</code>安装。</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h3&gt;&lt;p&gt;主要参考此安装文档 &lt;a href=&quot;http://docs.openvswitch.org/en/latest/intro/install
+    
+    </summary>
+    
+      <category term="openvswitch" scheme="http://blog.motitan.com/categories/openvswitch/"/>
+    
+      <category term="ovn" scheme="http://blog.motitan.com/categories/openvswitch/ovn/"/>
+    
+    
+      <category term="openvswitch" scheme="http://blog.motitan.com/tags/openvswitch/"/>
+    
+      <category term="ovn" scheme="http://blog.motitan.com/tags/ovn/"/>
+    
+      <category term="centos7" scheme="http://blog.motitan.com/tags/centos7/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>enable trim of yosemite</title>
+    <link href="http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/"/>
+    <id>http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/</id>
+    <published>2014-10-19T12:47:41.000Z</published>
+    <updated>2017-03-11T02:10:48.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>步骤在这里，<a href="https://gist.github.com/return1/4058659" target="_blank" rel="external">https://gist.github.com/return1/4058659</a></p>
+<p><code>yosemite</code>, <code>MBP 2011 early</code>，三星<code>ssd 840 evo</code>亲测开启成功。</p>
+<p>命令一句一句贴到<code>terminal</code>里执行。中间会重启2次。</p>
+<p><code>yosemite</code>里有一个新的安全设置<code>kext signing</code>。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。<br>现在的方法是关闭<code>kext signing</code>机制，这个配置是存在<code>NVRAM/PRAM</code>的。关闭全局<code>kext signing</code>是有安全风险的。</p>
+<p>开启成功后，如果以后重置了<code>NVRAM/PRAM</code>，会导致开不了机，切记。所以在重置前，需要先关闭<code>trim</code>。</p>
+<p>详细的参考，包括开机报错怎么回退，</p>
+<ul>
+<li><a href="http://www.cindori.org/trim-enabler-and-yosemite/" target="_blank" rel="external">http://www.cindori.org/trim-enabler-and-yosemite/</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;步骤在这里，&lt;a href=&quot;https://gist.github.com/return1/4058659&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;https://gist.github.com/return1/4058659&lt;/a&gt;&lt;/p&gt;
+&lt;p
+    
+    </summary>
+    
+      <category term="Mac OS X" scheme="http://blog.motitan.com/categories/Mac-OS-X/"/>
+    
+    
+      <category term="Mac OS X" scheme="http://blog.motitan.com/tags/Mac-OS-X/"/>
+    
+      <category term="trim" scheme="http://blog.motitan.com/tags/trim/"/>
+    
+      <category term="yosemite" scheme="http://blog.motitan.com/tags/yosemite/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>用pylint(pyreverse)生成python代码的uml类图</title>
+    <link href="http://blog.motitan.com/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/"/>
+    <id>http://blog.motitan.com/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/</id>
+    <published>2014-09-21T14:39:42.000Z</published>
+    <updated>2017-03-11T04:33:07.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="pyreverse"><a href="#pyreverse" class="headerlink" title="pyreverse"></a>pyreverse</h2><p><code>pyreverse</code>能方便的生成uml类图，<code>pylint</code>里自带了<code>pyreverse</code>这个工具。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
+<li>先安装graphviz</li>
+<li>pip install pylint</li>
+</ol>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer</div></pre></td></tr></table></figure>
+<h3 id="图片示例"><a href="#图片示例" class="headerlink" title="图片示例"></a>图片示例</h3><a id="more"></a>
+<p><img src="http://faicker.qiniudn.com/classes_SocketServer.png" alt=""></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;pyreverse&quot;&gt;&lt;a href=&quot;#pyreverse&quot; class=&quot;headerlink&quot; title=&quot;pyreverse&quot;&gt;&lt;/a&gt;pyreverse&lt;/h2&gt;&lt;p&gt;&lt;code&gt;pyreverse&lt;/code&gt;能方便的生成uml类图，&lt;code&gt;pylint&lt;/code&gt;里自带了&lt;code&gt;pyreverse&lt;/code&gt;这个工具。&lt;/p&gt;
+&lt;h3 id=&quot;安装&quot;&gt;&lt;a href=&quot;#安装&quot; class=&quot;headerlink&quot; title=&quot;安装&quot;&gt;&lt;/a&gt;安装&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;先安装graphviz&lt;/li&gt;
+&lt;li&gt;pip install pylint&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&quot;使用&quot;&gt;&lt;a href=&quot;#使用&quot; class=&quot;headerlink&quot; title=&quot;使用&quot;&gt;&lt;/a&gt;使用&lt;/h3&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;h3 id=&quot;图片示例&quot;&gt;&lt;a href=&quot;#图片示例&quot; class=&quot;headerlink&quot; title=&quot;图片示例&quot;&gt;&lt;/a&gt;图片示例&lt;/h3&gt;
+    
+    </summary>
+    
+      <category term="python" scheme="http://blog.motitan.com/categories/python/"/>
+    
+    
+      <category term="python" scheme="http://blog.motitan.com/tags/python/"/>
+    
+      <category term="uml" scheme="http://blog.motitan.com/tags/uml/"/>
+    
+      <category term="pylint" scheme="http://blog.motitan.com/tags/pylint/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>用nginx和heroku实现一个免费的http proxy</title>
+    <link href="http://blog.motitan.com/2014/09/14/%E7%94%A8nginx%E5%92%8Cheroku%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%85%8D%E8%B4%B9%E7%9A%84http-proxy/"/>
+    <id>http://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/</id>
+    <published>2014-09-14T15:24:03.000Z</published>
+    <updated>2017-03-11T02:35:59.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。</p>
+<p>首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如<code>xxx.herokuapp.com</code>，同时还支持SSL访问，这个是关键。</p>
+<p>heroku的app不能直接用作代理，因为访问heroku app大概路径是，<br><code>xxx.herokuapp.com</code>解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404  Object Not Found。</p>
+<p>思路是，</p>
+<p>把要访问的网站嵌入到url里，比如<code>http://xxx.herokuapp.com/p/www.google.com</code>，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问<code>http://xxx.herokuapp.com/p/www.google.com</code>返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。</p>
+<p>为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单）</p>
+<p>最后在浏览器里配置一下http proxy就行了。</p>
+<p>PS,</p>
+<p>heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。</p>
+<p>最后奉上nginx的配置和示例代码：<br><a id="more"></a><br>nginx server段配置如下，其他省略，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">server &#123;</div><div class="line">    listen       8080;</div><div class="line">    location / &#123;</div><div class="line">        resolver 223.5.5.5;</div><div class="line">        proxy_pass https://xxx.herokuapp.com/p/$http_host$uri$is_args$args;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>app.py用的flask（网络上搜索到的一个例子改了一点，用其他也是OK的）</p>
+<p>cat Procfile</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">web: python app.py</div></pre></td></tr></table></figure>
+<p>cat requirements.txt（flask已经有新版本了）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Flask==0.9</div><div class="line">Jinja2==2.6</div><div class="line">Werkzeug==0.8.3</div><div class="line">wsgiref==0.1.2</div><div class="line">requests==2.3.0</div></pre></td></tr></table></figure>
+<p>cat app.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div></pre></td><td class="code"><pre><div class="line"><span class="string">"""</span></div><div class="line">A simple proxy server. Usage:</div><div class="line">http://hostname:port/p/(URL to be proxied, minus protocol)</div><div class="line">For example:</div><div class="line">http://localhost:8080/p/www.google.com</div><div class="line">"""</div><div class="line"><span class="keyword">import</span> os</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, render_template, request, abort, Response, redirect</div><div class="line"><span class="keyword">from</span> werkzeug.serving <span class="keyword">import</span> WSGIRequestHandler</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">import</span> logging</div><div class="line"></div><div class="line">app = Flask(__name__.split(<span class="string">'.'</span>)[<span class="number">0</span>])</div><div class="line">logging.basicConfig(level=logging.INFO)</div><div class="line">LOG = logging.getLogger(<span class="string">"main.py"</span>)</div><div class="line"></div><div class="line"><span class="meta">@app.route('/&lt;path:url&gt;')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">root</span><span class="params">(url)</span>:</span></div><div class="line">    LOG.info(<span class="string">"Root route, path: %s"</span>, url)</div><div class="line">    <span class="comment"># If referred from a proxy request, then redirect to a URL with the proxy prefix.</span></div><div class="line">    <span class="comment"># This allows server-relative and protocol-relative URLs to work.</span></div><div class="line">    proxy_ref = proxy_ref_info(request)</div><div class="line">    <span class="keyword">if</span> proxy_ref:</div><div class="line">        redirect_url = <span class="string">"%s/%s%s"</span> % (proxy_ref[<span class="number">0</span>], url, (<span class="string">"?"</span> + request.query_string <span class="keyword">if</span> request.query_string <span class="keyword">else</span> <span class="string">""</span>))</div><div class="line">        LOG.info(<span class="string">"Redirecting referred URL to: %s"</span>, redirect_url)</div><div class="line">        <span class="keyword">return</span> proxy(redirect_url)</div><div class="line">    abort(<span class="number">404</span>)</div><div class="line"></div><div class="line"></div><div class="line"><span class="meta">@app.route('/p/&lt;path:url&gt;')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">proxy</span><span class="params">(url)</span>:</span></div><div class="line">    <span class="string">"""Fetches the specified URL and streams it out to the client.</span></div><div class="line"></div><div class="line">    If the request was referred by the proxy itself (e.g. this is an image fetch for</div><div class="line">    a previously proxied HTML page), then the original Referer is passed."""</div><div class="line">    r = get_source_rsp(url)</div><div class="line">    LOG.info(<span class="string">"Got %s response from %s"</span>,r.status_code, url)</div><div class="line">    headers = dict(r.headers)</div><div class="line">    <span class="keyword">if</span> headers.has_key(<span class="string">'transfer-encoding'</span>):</div><div class="line">        <span class="keyword">del</span>(headers[<span class="string">'transfer-encoding'</span>])</div><div class="line">    <span class="keyword">if</span> headers.has_key(<span class="string">'content-encoding'</span>):</div><div class="line">        <span class="keyword">del</span>(headers[<span class="string">'content-encoding'</span>])</div><div class="line">    <span class="keyword">return</span> Response(r.content, headers = headers)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_source_rsp</span><span class="params">(url)</span>:</span></div><div class="line">        url = <span class="string">'http://%s'</span> % url</div><div class="line">        LOG.info(<span class="string">"Fetching %s"</span>, url)</div><div class="line">        <span class="comment"># Pass original Referer for subsequent resource requests</span></div><div class="line">        proxy_ref = proxy_ref_info(request)</div><div class="line">        headers = &#123; <span class="string">"Referer"</span> : <span class="string">"http://%s/%s"</span> % (proxy_ref[<span class="number">0</span>], proxy_ref[<span class="number">1</span>])&#125; <span class="keyword">if</span> proxy_ref <span class="keyword">else</span> &#123;&#125;</div><div class="line">        <span class="comment"># Fetch the URL, and stream it back</span></div><div class="line">        LOG.info(<span class="string">"Fetching with headers: %s, %s"</span>, url, headers)</div><div class="line">        <span class="keyword">return</span> requests.get(url, stream=<span class="keyword">False</span>, params = request.args, headers=headers)</div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">split_url</span><span class="params">(url)</span>:</span></div><div class="line">    <span class="string">"""Splits the given URL into a tuple of (protocol, host, uri)"""</span></div><div class="line">    proto, rest = url.split(<span class="string">':'</span>, <span class="number">1</span>)</div><div class="line">    rest = rest[<span class="number">2</span>:].split(<span class="string">'/'</span>, <span class="number">1</span>)</div><div class="line">    host, uri = (rest[<span class="number">0</span>], rest[<span class="number">1</span>]) <span class="keyword">if</span> len(rest) == <span class="number">2</span> <span class="keyword">else</span> (rest[<span class="number">0</span>], <span class="string">""</span>)</div><div class="line">    <span class="keyword">return</span> (proto, host, uri)</div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">proxy_ref_info</span><span class="params">(request)</span>:</span></div><div class="line">    <span class="string">"""Parses out Referer info indicating the request is from a previously proxied page.</span></div><div class="line"></div><div class="line">    For example, if:</div><div class="line">        Referer: http://localhost:8080/p/google.com/search?q=foo</div><div class="line">    then the result is:</div><div class="line">        ("google.com", "search?q=foo")</div><div class="line">    """</div><div class="line">    ref = request.headers.get(<span class="string">'referer'</span>)</div><div class="line">    <span class="keyword">if</span> ref:</div><div class="line">        _, _, uri = split_url(ref)</div><div class="line">        <span class="keyword">if</span> uri.find(<span class="string">"/"</span>) &lt; <span class="number">0</span>:</div><div class="line">            <span class="keyword">return</span> <span class="keyword">None</span></div><div class="line">        first, rest = uri.split(<span class="string">"/"</span>, <span class="number">1</span>)</div><div class="line">        <span class="keyword">if</span> first <span class="keyword">in</span> <span class="string">"pd"</span>:</div><div class="line">            parts = rest.split(<span class="string">"/"</span>, <span class="number">1</span>)</div><div class="line">            r = (parts[<span class="number">0</span>], parts[<span class="number">1</span>]) <span class="keyword">if</span> len(parts) == <span class="number">2</span> <span class="keyword">else</span> (parts[<span class="number">0</span>], <span class="string">""</span>)</div><div class="line">            LOG.info(<span class="string">"Referred by proxy host, uri: %s, %s"</span>, r[<span class="number">0</span>], r[<span class="number">1</span>])</div><div class="line">            <span class="keyword">return</span> r</div><div class="line">    <span class="keyword">return</span> <span class="keyword">None</span></div><div class="line"></div><div class="line"><span class="meta">@app.route('/')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello</span><span class="params">()</span>:</span></div><div class="line">    <span class="keyword">return</span> <span class="string">'Hello World!'</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="comment"># Bind to PORT if defined, otherwise default to 5000.</span></div><div class="line">    port = int(os.environ.get(<span class="string">'PORT'</span>, <span class="number">5000</span>))</div><div class="line">    WSGIRequestHandler.protocol_version = <span class="string">"HTTP/1.1"</span></div><div class="line">    app.run(host=<span class="string">'0.0.0.0'</span>, port=port, threaded=<span class="keyword">True</span>)</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。&lt;/p&gt;
+&lt;p&gt;首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如&lt;code&gt;xxx.herokuapp.com&lt;/code&gt;，同时还支持SSL访问，这个是关键。&lt;/p&gt;
+&lt;p&gt;heroku的app不能直接用作代理，因为访问heroku app大概路径是，&lt;br&gt;&lt;code&gt;xxx.herokuapp.com&lt;/code&gt;解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404  Object Not Found。&lt;/p&gt;
+&lt;p&gt;思路是，&lt;/p&gt;
+&lt;p&gt;把要访问的网站嵌入到url里，比如&lt;code&gt;http://xxx.herokuapp.com/p/www.google.com&lt;/code&gt;，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问&lt;code&gt;http://xxx.herokuapp.com/p/www.google.com&lt;/code&gt;返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。&lt;/p&gt;
+&lt;p&gt;为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单）&lt;/p&gt;
+&lt;p&gt;最后在浏览器里配置一下http proxy就行了。&lt;/p&gt;
+&lt;p&gt;PS,&lt;/p&gt;
+&lt;p&gt;heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。&lt;/p&gt;
+&lt;p&gt;最后奉上nginx的配置和示例代码：&lt;br&gt;
+    
+    </summary>
+    
+      <category term="proxy" scheme="http://blog.motitan.com/categories/proxy/"/>
+    
+    
+      <category term="nginx" scheme="http://blog.motitan.com/tags/nginx/"/>
+    
+      <category term="heroku" scheme="http://blog.motitan.com/tags/heroku/"/>
+    
+      <category term="http proxy" scheme="http://blog.motitan.com/tags/http-proxy/"/>
+    
+  </entry>
+  
+</feed>
