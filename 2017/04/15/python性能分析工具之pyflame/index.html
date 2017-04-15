@@ -73,7 +73,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Mac OS X,trim,yosemite," />
+  <meta name="keywords" content="python,pyflame,profile," />
 
 
 
@@ -91,25 +91,25 @@
 
 
 
-<meta name="description" content="步骤在这里，https://gist.github.com/return1/4058659
-yosemite, MBP 2011 early，三星ssd 840 evo亲测开启成功。
-命令一句一句贴到terminal里执行。中间会重启2次。
-yosemite里有一个新的安全设置kext signing。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。现在的方法是关闭kext signi">
+<meta name="description" content="这篇文章python性能优化总结的比较好，可以先看这篇的介绍。
+里面介绍了针对不同场景使用的工具，
+
+对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotsho">
 <meta property="og:type" content="article">
-<meta property="og:title" content="enable trim of yosemite">
-<meta property="og:url" content="http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/index.html">
+<meta property="og:title" content="python性能分析工具之pyflame">
+<meta property="og:url" content="http://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
-<meta property="og:description" content="步骤在这里，https://gist.github.com/return1/4058659
-yosemite, MBP 2011 early，三星ssd 840 evo亲测开启成功。
-命令一句一句贴到terminal里执行。中间会重启2次。
-yosemite里有一个新的安全设置kext signing。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。现在的方法是关闭kext signi">
-<meta property="og:updated_time" content="2017-03-11T02:10:48.000Z">
+<meta property="og:description" content="这篇文章python性能优化总结的比较好，可以先看这篇的介绍。
+里面介绍了针对不同场景使用的工具，
+
+对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotsho">
+<meta property="og:updated_time" content="2017-04-15T15:02:30.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="enable trim of yosemite">
-<meta name="twitter:description" content="步骤在这里，https://gist.github.com/return1/4058659
-yosemite, MBP 2011 early，三星ssd 840 evo亲测开启成功。
-命令一句一句贴到terminal里执行。中间会重启2次。
-yosemite里有一个新的安全设置kext signing。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。现在的方法是关闭kext signi">
+<meta name="twitter:title" content="python性能分析工具之pyflame">
+<meta name="twitter:description" content="这篇文章python性能优化总结的比较好，可以先看这篇的介绍。
+里面介绍了针对不同场景使用的工具，
+
+对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotsho">
 
 
 
@@ -137,13 +137,13 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
 
 
 
-  <link rel="canonical" href="http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/"/>
+  <link rel="canonical" href="http://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/"/>
 
 
 
 
 
-  <title> enable trim of yosemite | faicker's个人博客 </title>
+  <title> python性能分析工具之pyflame | faicker's个人博客 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -306,7 +306,7 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/">
+    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -327,7 +327,7 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
             
             
               
-                enable trim of yosemite
+                python性能分析工具之pyflame
               
             
           </h2>
@@ -342,8 +342,8 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-10-19T20:47:41+08:00">
-                2014-10-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-15T22:30:00+08:00">
+                2017-04-15
               </time>
             
 
@@ -365,8 +365,30 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Mac-OS-X/" itemprop="url" rel="index">
-                    <span itemprop="name">Mac OS X</span>
+                  <a href="/categories/python/" itemprop="url" rel="index">
+                    <span itemprop="name">python</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/pyflame/" itemprop="url" rel="index">
+                    <span itemprop="name">pyflame</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/pyflame/profile/" itemprop="url" rel="index">
+                    <span itemprop="name">profile</span>
                   </a>
                 </span>
 
@@ -383,8 +405,8 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2014/10/19/enable-trim-of-yosemite/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/10/19/enable-trim-of-yosemite/" itemprop="commentCount"></span>
+                <a href="/2017/04/15/python性能分析工具之pyflame/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/04/15/python性能分析工具之pyflame/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -410,15 +432,28 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
       
 
       
-        <p>步骤在这里，<a href="https://gist.github.com/return1/4058659" target="_blank" rel="external">https://gist.github.com/return1/4058659</a></p>
-<p><code>yosemite</code>, <code>MBP 2011 early</code>，三星<code>ssd 840 evo</code>亲测开启成功。</p>
-<p>命令一句一句贴到<code>terminal</code>里执行。中间会重启2次。</p>
-<p><code>yosemite</code>里有一个新的安全设置<code>kext signing</code>。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。<br>现在的方法是关闭<code>kext signing</code>机制，这个配置是存在<code>NVRAM/PRAM</code>的。关闭全局<code>kext signing</code>是有安全风险的。</p>
-<p>开启成功后，如果以后重置了<code>NVRAM/PRAM</code>，会导致开不了机，切记。所以在重置前，需要先关闭<code>trim</code>。</p>
-<p>详细的参考，包括开机报错怎么回退，</p>
-<ul>
-<li><a href="http://www.cindori.org/trim-enabler-and-yosemite/" target="_blank" rel="external">http://www.cindori.org/trim-enabler-and-yosemite/</a></li>
-</ul>
+        <p>这篇文章<a href="http://www.cnblogs.com/xybaby/p/6510941.html" target="_blank" rel="external">python性能优化</a>总结的比较好，可以先看这篇的介绍。</p>
+<p>里面介绍了针对不同场景使用的工具，</p>
+<blockquote>
+<p>对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。<br>其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotshot对目标代码的运行影响较小，代价是更多的后处理时间，而且hotshot已经停止维护了。需要注意的是，profile（Cprofile hotshot）只适合单线程的python程序。<br>对于多线程，可以使用yappi，yappi不仅支持多线程，还可以精确到CPU时间<br>对于协程（greenlet），可以使用greenletprofiler，基于yappi修改，用greenlet context hook住thread context。</p>
+</blockquote>
+<p>profile的结果可以用<a href="https://github.com/jrfonseca/gprof2dot" target="_blank" rel="external">gprof2dot</a>生成函数调用开销图，进行分析。</p>
+<p>这里介绍另外一个好用的工具pyflame。对单线程，多线程，协程支持都很好，使用简单，不用修改源码，直接profile运行的进程。效率较高，进程运行只会慢3倍左右，建议非线上环境使用。最最关键的是可以直接生成<a href="https://github.com/brendangregg/FlameGraph" target="_blank" rel="external">火焰图</a>，具体介绍可以看github链接<a href="https://github.com/uber/pyflame" target="_blank" rel="external">pyflame</a>。<br>火焰图怎么看先google学习下，比gprof2dot的图更清晰明了。</p>
+<hr>
+<p>pyflame的安装步骤在github上介绍的很详细，对centos7也是适用的。这里介绍下内核较老的centos6+python2.6下面的安装（是一个C API 缺失<a href="http://hustcat.github.io/setns/" target="_blank" rel="external">setns</a>）。<br><a id="more"></a></p>
+<ol>
+<li>下载源码，<code>git clone https://github.com/faicker/pyflame</code></li>
+<li><p>安装编译环境（高版本gcc和autoconf）及依赖包，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">yum install centos-release-scl</div><div class="line">yum install devtoolset-3-gcc devtoolset-3-gcc-c++</div><div class="line">rpm -ivh https://www.softwarecollections.org/en/scls/praiskup/autotools/epel-6-x86_64/download/praiskup-autotools-epel-6-x86_64.noarch.rpm</div><div class="line">yum install autotools-latest</div><div class="line">yum install python-devel</div></pre></td></tr></table></figure>
+</li>
+<li><p>编辑文件<code>/usr/lib64/pkgconfig/python2.pc</code></p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">prefix=/usr</div><div class="line">exec_prefix=/usr</div><div class="line">libdir=/usr/lib64</div><div class="line">includedir=/usr/include</div><div class="line">Name: Python</div><div class="line">Description: Python library</div><div class="line">Requires:</div><div class="line">Version: 2.6</div><div class="line">Libs.private: -lpthread -ldl  -lutil</div><div class="line">Libs: -L<span class="variable">$&#123;libdir&#125;</span> -lpython2.6</div><div class="line">Cflags: -I<span class="variable">$&#123;includedir&#125;</span>/python2.6</div></pre></td></tr></table></figure>
+</li>
+<li><p>编译，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">scl <span class="built_in">enable</span> devtoolset-3 bash</div><div class="line">scl <span class="built_in">enable</span> autotools-latest bash</div><div class="line">./autogen.sh</div><div class="line">./configure</div><div class="line">make</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>Enjoy.</p>
 
       
     </div>
@@ -448,11 +483,11 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
       
         <div class="post-tags">
           
-            <a href="/tags/Mac-OS-X/" rel="tag"># Mac OS X</a>
+            <a href="/tags/python/" rel="tag"># python</a>
           
-            <a href="/tags/trim/" rel="tag"># trim</a>
+            <a href="/tags/pyflame/" rel="tag"># pyflame</a>
           
-            <a href="/tags/yosemite/" rel="tag"># yosemite</a>
+            <a href="/tags/profile/" rel="tag"># profile</a>
           
         </div>
       
@@ -465,8 +500,8 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" rel="next" title="用pylint(pyreverse)生成python代码的uml类图">
-                <i class="fa fa-chevron-left"></i> 用pylint(pyreverse)生成python代码的uml类图
+              <a href="/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" rel="next" title="install openvswitch 2.7.0 and ovn on centos 7">
+                <i class="fa fa-chevron-left"></i> install openvswitch 2.7.0 and ovn on centos 7
               </a>
             
           </div>
@@ -474,10 +509,6 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" rel="prev" title="install openvswitch 2.7.0 and ovn on centos 7">
-                install openvswitch 2.7.0 and ovn on centos 7 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -771,9 +802,9 @@ yosemite里有一个新的安全设置kext signing。如果驱动被修改，没
 
     <script type="text/javascript">
       var disqus_shortname = 'faicker';
-      var disqus_identifier = '2014/10/19/enable-trim-of-yosemite/';
+      var disqus_identifier = '2017/04/15/python性能分析工具之pyflame/';
 
-      var disqus_title = "enable trim of yosemite";
+      var disqus_title = "python性能分析工具之pyflame";
 
 
       function run_disqus_script(disqus_script) {

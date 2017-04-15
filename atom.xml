@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.motitan.com/"/>
-  <updated>2017-03-11T04:31:30.000Z</updated>
+  <updated>2017-04-15T15:02:30.000Z</updated>
   <id>http://blog.motitan.com/</id>
   
   <author>
@@ -14,6 +14,66 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>python性能分析工具之pyflame</title>
+    <link href="http://blog.motitan.com/2017/04/15/python%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7%E4%B9%8Bpyflame/"/>
+    <id>http://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/</id>
+    <published>2017-04-15T14:30:00.000Z</published>
+    <updated>2017-04-15T15:02:30.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>这篇文章<a href="http://www.cnblogs.com/xybaby/p/6510941.html" target="_blank" rel="external">python性能优化</a>总结的比较好，可以先看这篇的介绍。</p>
+<p>里面介绍了针对不同场景使用的工具，</p>
+<blockquote>
+<p>对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。<br>其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotshot对目标代码的运行影响较小，代价是更多的后处理时间，而且hotshot已经停止维护了。需要注意的是，profile（Cprofile hotshot）只适合单线程的python程序。<br>对于多线程，可以使用yappi，yappi不仅支持多线程，还可以精确到CPU时间<br>对于协程（greenlet），可以使用greenletprofiler，基于yappi修改，用greenlet context hook住thread context。</p>
+</blockquote>
+<p>profile的结果可以用<a href="https://github.com/jrfonseca/gprof2dot" target="_blank" rel="external">gprof2dot</a>生成函数调用开销图，进行分析。</p>
+<p>这里介绍另外一个好用的工具pyflame。对单线程，多线程，协程支持都很好，使用简单，不用修改源码，直接profile运行的进程。效率较高，进程运行只会慢3倍左右，建议非线上环境使用。最最关键的是可以直接生成<a href="https://github.com/brendangregg/FlameGraph" target="_blank" rel="external">火焰图</a>，具体介绍可以看github链接<a href="https://github.com/uber/pyflame" target="_blank" rel="external">pyflame</a>。<br>火焰图怎么看先google学习下，比gprof2dot的图更清晰明了。</p>
+<hr>
+<p>pyflame的安装步骤在github上介绍的很详细，对centos7也是适用的。这里介绍下内核较老的centos6+python2.6下面的安装（是一个C API 缺失<a href="http://hustcat.github.io/setns/" target="_blank" rel="external">setns</a>）。<br><a id="more"></a></p>
+<ol>
+<li>下载源码，<code>git clone https://github.com/faicker/pyflame</code></li>
+<li><p>安装编译环境（高版本gcc和autoconf）及依赖包，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">yum install centos-release-scl</div><div class="line">yum install devtoolset-3-gcc devtoolset-3-gcc-c++</div><div class="line">rpm -ivh https://www.softwarecollections.org/en/scls/praiskup/autotools/epel-6-x86_64/download/praiskup-autotools-epel-6-x86_64.noarch.rpm</div><div class="line">yum install autotools-latest</div><div class="line">yum install python-devel</div></pre></td></tr></table></figure>
+</li>
+<li><p>编辑文件<code>/usr/lib64/pkgconfig/python2.pc</code></p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">prefix=/usr</div><div class="line">exec_prefix=/usr</div><div class="line">libdir=/usr/lib64</div><div class="line">includedir=/usr/include</div><div class="line">Name: Python</div><div class="line">Description: Python library</div><div class="line">Requires:</div><div class="line">Version: 2.6</div><div class="line">Libs.private: -lpthread -ldl  -lutil</div><div class="line">Libs: -L<span class="variable">$&#123;libdir&#125;</span> -lpython2.6</div><div class="line">Cflags: -I<span class="variable">$&#123;includedir&#125;</span>/python2.6</div></pre></td></tr></table></figure>
+</li>
+<li><p>编译，</p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">scl <span class="built_in">enable</span> devtoolset-3 bash</div><div class="line">scl <span class="built_in">enable</span> autotools-latest bash</div><div class="line">./autogen.sh</div><div class="line">./configure</div><div class="line">make</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>Enjoy.</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;这篇文章&lt;a href=&quot;http://www.cnblogs.com/xybaby/p/6510941.html&quot;&gt;python性能优化&lt;/a&gt;总结的比较好，可以先看这篇的介绍。&lt;/p&gt;
+&lt;p&gt;里面介绍了针对不同场景使用的工具，&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。&lt;br&gt;其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotshot对目标代码的运行影响较小，代价是更多的后处理时间，而且hotshot已经停止维护了。需要注意的是，profile（Cprofile hotshot）只适合单线程的python程序。&lt;br&gt;对于多线程，可以使用yappi，yappi不仅支持多线程，还可以精确到CPU时间&lt;br&gt;对于协程（greenlet），可以使用greenletprofiler，基于yappi修改，用greenlet context hook住thread context。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;profile的结果可以用&lt;a href=&quot;https://github.com/jrfonseca/gprof2dot&quot;&gt;gprof2dot&lt;/a&gt;生成函数调用开销图，进行分析。&lt;/p&gt;
+&lt;p&gt;这里介绍另外一个好用的工具pyflame。对单线程，多线程，协程支持都很好，使用简单，不用修改源码，直接profile运行的进程。效率较高，进程运行只会慢3倍左右，建议非线上环境使用。最最关键的是可以直接生成&lt;a href=&quot;https://github.com/brendangregg/FlameGraph&quot;&gt;火焰图&lt;/a&gt;，具体介绍可以看github链接&lt;a href=&quot;https://github.com/uber/pyflame&quot;&gt;pyflame&lt;/a&gt;。&lt;br&gt;火焰图怎么看先google学习下，比gprof2dot的图更清晰明了。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;pyflame的安装步骤在github上介绍的很详细，对centos7也是适用的。这里介绍下内核较老的centos6+python2.6下面的安装（是一个C API 缺失&lt;a href=&quot;http://hustcat.github.io/setns/&quot;&gt;setns&lt;/a&gt;）。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="python" scheme="http://blog.motitan.com/categories/python/"/>
+    
+      <category term="pyflame" scheme="http://blog.motitan.com/categories/python/pyflame/"/>
+    
+      <category term="profile" scheme="http://blog.motitan.com/categories/python/pyflame/profile/"/>
+    
+    
+      <category term="python" scheme="http://blog.motitan.com/tags/python/"/>
+    
+      <category term="pyflame" scheme="http://blog.motitan.com/tags/pyflame/"/>
+    
+      <category term="profile" scheme="http://blog.motitan.com/tags/profile/"/>
+    
+  </entry>
   
   <entry>
     <title>install openvswitch 2.7.0 and ovn on centos 7</title>
