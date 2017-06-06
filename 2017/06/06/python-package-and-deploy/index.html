@@ -73,7 +73,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="linux, network, virt, sdn, cloud, c++, python, go" />
+  <meta name="keywords" content="python,virtualenv,fpm," />
 
 
 
@@ -91,15 +91,19 @@
 
 
 
-<meta name="description" content="network | linux | virt">
-<meta property="og:type" content="website">
-<meta property="og:title" content="faicker's个人博客">
-<meta property="og:url" content="http://blog.motitan.com/categories/openvswitch/ovn/index.html">
+<meta name="description" content="前言python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。
+一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，doc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python package and deploy">
+<meta property="og:url" content="http://blog.motitan.com/2017/06/06/python-package-and-deploy/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
-<meta property="og:description" content="network | linux | virt">
+<meta property="og:description" content="前言python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。
+一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，doc">
+<meta property="og:updated_time" content="2017-06-06T08:18:20.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="faicker's个人博客">
-<meta name="twitter:description" content="network | linux | virt">
+<meta name="twitter:title" content="python package and deploy">
+<meta name="twitter:description" content="前言python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。
+一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，doc">
 
 
 
@@ -127,13 +131,13 @@
 
 
 
-  <link rel="canonical" href="http://blog.motitan.com/categories/openvswitch/ovn/"/>
+  <link rel="canonical" href="http://blog.motitan.com/2017/06/06/python-package-and-deploy/"/>
 
 
 
 
 
-  <title> 分类: ovn | faicker's个人博客 </title>
+  <title> python package and deploy | faicker's个人博客 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -168,7 +172,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left  ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -286,47 +290,257 @@
           <div id="content" class="content">
             
 
-  <section id="posts" class="posts-collapse">
-    <div class="collection-title">
-      <h2 >
-        ovn
-        <small>分类</small>
-      </h2>
-    </div>
-
+  <div id="posts" class="posts-expand">
     
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/" itemprop="url">
-              
-                <span itemprop="name">install openvswitch 2.7.0 and ovn on centos 7</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-03-11T11:55:00+08:00"
-              content="2017-03-11" >
-          03-11
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-    
-  </section>
 
   
 
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/06/06/python-package-and-deploy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                python package and deploy
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-06T15:55:00+08:00">
+                2017-06-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index">
+                    <span itemprop="name">python</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/deploy/" itemprop="url" rel="index">
+                    <span itemprop="name">deploy</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/06/06/python-package-and-deploy/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/06/python-package-and-deploy/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。</p>
+<p>一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，docker 是一个选择。这里讨论版本一致的情况。</p>
+<h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>用到了以下工具，</p>
+<ul>
+<li><a href="https://virtualenv.pypa.io/en/stable/" target="_blank" rel="external">virtualenv</a>，包隔离</li>
+<li><a href="https://github.com/jordansissel/fpm" target="_blank" rel="external">fpm</a>，打包工具，支持打包成 rpm/deb/osxpkg 等。</li>
+</ul>
+<p>用 virtualenv 来做依赖包隔离，包含了自己的程序和依赖的包；系统自带的包管理工具（centos 是 rpm）来做版本管理，实现包的更新，回退。</p>
+<h3 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h3><h4 id="fpm-安装（centos6-下为例）"><a href="#fpm-安装（centos6-下为例）" class="headerlink" title="fpm 安装（centos6 下为例）"></a>fpm 安装（centos6 下为例）</h4><ul>
+<li>安装 virtualenv-tools。<br><code>pip install virtualenv-tools</code></li>
+<li>安装 ruby（&gt;=1.9.3），用到了 <a href="https://www.softwarecollections.org/en/" target="_blank" rel="external">scl</a>。<br><code>yum install rh-ruby23-ruby rh-ruby23-ruby-devel</code><br><code>scl enable rh-ruby23 bash</code></li>
+<li>安装 fpm。<br><code>gem install fpm</code></li>
+</ul>
+<h4 id="python项目"><a href="#python项目" class="headerlink" title="python项目"></a>python项目</h4><p>可以参考 <a href="https://github.com/faicker/pychinadns" target="_blank" rel="external">pychinadns</a>，需要写 setup.py。</p>
+<h4 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h4><p><code>fpm --verbose -f -v 0.1.0 -n flowcleaner -s virtualenv -t rpm --virtualenv-pypi http://mirrors.aliyun.com/pypi/simple flowcleaner/</code><br>-s 指定源类型，-t 指定目标类型，-n 指定包名，flowcleaner/ 是项目目录。<br>会把整个 virtualenv 的目录打包到rpm里，virtualenv 里包含了依赖的包。</p>
+<h4 id="部署和运行"><a href="#部署和运行" class="headerlink" title="部署和运行"></a>部署和运行</h4><p>部署就是一个rpm包！跟标准的rpm包操作一样。</p>
+<p>rpm 安装时，virtualenv 默认安装在 /usr/share/python 目录下。<br>执行<code>/usr/share/python/flowcleaner/bin/python xxx.py</code>来从 virtualenv 里运行。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+            <a href="/tags/virtualenv/" rel="tag"># virtualenv</a>
+          
+            <a href="/tags/fpm/" rel="tag"># fpm</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/04/15/python性能分析工具之pyflame/" rel="next" title="python性能分析工具之pyflame">
+                <i class="fa fa-chevron-left"></i> python性能分析工具之pyflame
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
 
           
           </div>
@@ -334,6 +548,17 @@
 
 
           
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
 
         </div>
         
@@ -353,8 +578,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -423,6 +657,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#介绍"><span class="nav-number">2.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#操作步骤"><span class="nav-number">3.</span> <span class="nav-text">操作步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fpm-安装（centos6-下为例）"><span class="nav-number">3.1.</span> <span class="nav-text">fpm 安装（centos6 下为例）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#python项目"><span class="nav-number">3.2.</span> <span class="nav-text">python项目</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#打包"><span class="nav-number">3.3.</span> <span class="nav-text">打包</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#部署和运行"><span class="nav-number">3.4.</span> <span class="nav-text">部署和运行</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -535,6 +785,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
 
   
 
@@ -551,9 +805,9 @@
 
     <script type="text/javascript">
       var disqus_shortname = 'faicker';
-      var disqus_identifier = 'categories/openvswitch/ovn/index.html';
+      var disqus_identifier = '2017/06/06/python-package-and-deploy/';
 
-      var disqus_title = "";
+      var disqus_title = "python package and deploy";
 
 
       function run_disqus_script(disqus_script) {
@@ -566,6 +820,13 @@
 
       run_disqus_script('count.js');
 
+      
+        var disqus_config = function () {
+            this.page.url = disqus_url;
+            this.page.identifier = disqus_identifier;
+            this.page.title = disqus_title;
+        };
+        run_disqus_script('embed.js');
       
 
     </script>

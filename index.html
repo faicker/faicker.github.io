@@ -298,6 +298,186 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/06/06/python-package-and-deploy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/06/python-package-and-deploy/" itemprop="url">
+                  python package and deploy
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-06T15:55:00+08:00">
+                2017-06-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index">
+                    <span itemprop="name">python</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/deploy/" itemprop="url" rel="index">
+                    <span itemprop="name">deploy</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/06/06/python-package-and-deploy/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/06/python-package-and-deploy/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。</p>
+<p>一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，docker 是一个选择。这里讨论版本一致的情况。</p>
+<h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>用到了以下工具，</p>
+<ul>
+<li><a href="https://virtualenv.pypa.io/en/stable/" target="_blank" rel="external">virtualenv</a>，包隔离</li>
+<li><a href="https://github.com/jordansissel/fpm" target="_blank" rel="external">fpm</a>，打包工具，支持打包成 rpm/deb/osxpkg 等。</li>
+</ul>
+<p>用 virtualenv 来做依赖包隔离，包含了自己的程序和依赖的包；系统自带的包管理工具（centos 是 rpm）来做版本管理，实现包的更新，回退。</p>
+<h3 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h3><h4 id="fpm-安装（centos6-下为例）"><a href="#fpm-安装（centos6-下为例）" class="headerlink" title="fpm 安装（centos6 下为例）"></a>fpm 安装（centos6 下为例）</h4><ul>
+<li>安装 virtualenv-tools。<br><code>pip install virtualenv-tools</code></li>
+<li>安装 ruby（&gt;=1.9.3），用到了 <a href="https://www.softwarecollections.org/en/" target="_blank" rel="external">scl</a>。<br><code>yum install rh-ruby23-ruby rh-ruby23-ruby-devel</code><br><code>scl enable rh-ruby23 bash</code></li>
+<li>安装 fpm。<br><code>gem install fpm</code></li>
+</ul>
+<h4 id="python项目"><a href="#python项目" class="headerlink" title="python项目"></a>python项目</h4><p>可以参考 <a href="https://github.com/faicker/pychinadns" target="_blank" rel="external">pychinadns</a>，需要写 setup.py。</p>
+<h4 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h4><p><code>fpm --verbose -f -v 0.1.0 -n flowcleaner -s virtualenv -t rpm --virtualenv-pypi http://mirrors.aliyun.com/pypi/simple flowcleaner/</code><br>-s 指定源类型，-t 指定目标类型，-n 指定包名，flowcleaner/ 是项目目录。<br>会把整个 virtualenv 的目录打包到rpm里，virtualenv 里包含了依赖的包。</p>
+<h4 id="部署和运行"><a href="#部署和运行" class="headerlink" title="部署和运行"></a>部署和运行</h4><p>部署就是一个rpm包！跟标准的rpm包操作一样。</p>
+<p>rpm 安装时，virtualenv 默认安装在 /usr/share/python 目录下。<br>执行<code>/usr/share/python/flowcleaner/bin/python xxx.py</code>来从 virtualenv 里运行。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -997,175 +1177,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" itemprop="url">
-                  用nginx和heroku实现一个免费的http proxy
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-09-14T23:24:03+08:00">
-                2014-09-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/proxy/" itemprop="url" rel="index">
-                    <span itemprop="name">proxy</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/14/用nginx和heroku实现一个免费的http-proxy/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。</p>
-<p>首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如<code>xxx.herokuapp.com</code>，同时还支持SSL访问，这个是关键。</p>
-<p>heroku的app不能直接用作代理，因为访问heroku app大概路径是，<br><code>xxx.herokuapp.com</code>解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404  Object Not Found。</p>
-<p>思路是，</p>
-<p>把要访问的网站嵌入到url里，比如<code>http://xxx.herokuapp.com/p/www.google.com</code>，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问<code>http://xxx.herokuapp.com/p/www.google.com</code>返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。</p>
-<p>为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单）</p>
-<p>最后在浏览器里配置一下http proxy就行了。</p>
-<p>PS,</p>
-<p>heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。</p>
-<p>最后奉上nginx的配置和示例代码：<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
 
           
           </div>
@@ -1208,7 +1226,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">6</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1219,7 +1237,7 @@
             
             <div class="site-state-item site-state-categories">
               
-                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">分类</span>
               
             </div>
@@ -1230,7 +1248,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-count">16</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

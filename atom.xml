@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.motitan.com/"/>
-  <updated>2017-04-16T04:01:53.000Z</updated>
+  <updated>2017-06-06T08:18:20.000Z</updated>
   <id>http://blog.motitan.com/</id>
   
   <author>
@@ -14,6 +14,51 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>python package and deploy</title>
+    <link href="http://blog.motitan.com/2017/06/06/python-package-and-deploy/"/>
+    <id>http://blog.motitan.com/2017/06/06/python-package-and-deploy/</id>
+    <published>2017-06-06T07:55:00.000Z</published>
+    <updated>2017-06-06T08:18:20.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。</p>
+<p>一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，docker 是一个选择。这里讨论版本一致的情况。</p>
+<h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>用到了以下工具，</p>
+<ul>
+<li><a href="https://virtualenv.pypa.io/en/stable/" target="_blank" rel="external">virtualenv</a>，包隔离</li>
+<li><a href="https://github.com/jordansissel/fpm" target="_blank" rel="external">fpm</a>，打包工具，支持打包成 rpm/deb/osxpkg 等。</li>
+</ul>
+<p>用 virtualenv 来做依赖包隔离，包含了自己的程序和依赖的包；系统自带的包管理工具（centos 是 rpm）来做版本管理，实现包的更新，回退。</p>
+<h3 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h3><h4 id="fpm-安装（centos6-下为例）"><a href="#fpm-安装（centos6-下为例）" class="headerlink" title="fpm 安装（centos6 下为例）"></a>fpm 安装（centos6 下为例）</h4><ul>
+<li>安装 virtualenv-tools。<br><code>pip install virtualenv-tools</code></li>
+<li>安装 ruby（&gt;=1.9.3），用到了 <a href="https://www.softwarecollections.org/en/" target="_blank" rel="external">scl</a>。<br><code>yum install rh-ruby23-ruby rh-ruby23-ruby-devel</code><br><code>scl enable rh-ruby23 bash</code></li>
+<li>安装 fpm。<br><code>gem install fpm</code></li>
+</ul>
+<h4 id="python项目"><a href="#python项目" class="headerlink" title="python项目"></a>python项目</h4><p>可以参考 <a href="https://github.com/faicker/pychinadns" target="_blank" rel="external">pychinadns</a>，需要写 setup.py。</p>
+<h4 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h4><p><code>fpm --verbose -f -v 0.1.0 -n flowcleaner -s virtualenv -t rpm --virtualenv-pypi http://mirrors.aliyun.com/pypi/simple flowcleaner/</code><br>-s 指定源类型，-t 指定目标类型，-n 指定包名，flowcleaner/ 是项目目录。<br>会把整个 virtualenv 的目录打包到rpm里，virtualenv 里包含了依赖的包。</p>
+<h4 id="部署和运行"><a href="#部署和运行" class="headerlink" title="部署和运行"></a>部署和运行</h4><p>部署就是一个rpm包！跟标准的rpm包操作一样。</p>
+<p>rpm 安装时，virtualenv 默认安装在 /usr/share/python 目录下。<br>执行<code>/usr/share/python/flowcleaner/bin/python xxx.py</code>来从 virtualenv 里运行。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h3&gt;&lt;p&gt;python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序
+    
+    </summary>
+    
+      <category term="python" scheme="http://blog.motitan.com/categories/python/"/>
+    
+      <category term="deploy" scheme="http://blog.motitan.com/categories/python/deploy/"/>
+    
+    
+      <category term="python" scheme="http://blog.motitan.com/tags/python/"/>
+    
+      <category term="virtualenv" scheme="http://blog.motitan.com/tags/virtualenv/"/>
+    
+      <category term="fpm" scheme="http://blog.motitan.com/tags/fpm/"/>
+    
+  </entry>
   
   <entry>
     <title>python性能分析工具之pyflame</title>
