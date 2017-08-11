@@ -4,6 +4,35 @@
 
     
   <url>
+    <loc>http://blog.motitan.com/2017/08/11/openstack-openvswitch%E6%B5%81%E8%A1%A8%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2017-08-11T09:35:47.000Z</lastmod>
+    <data>
+        <display>
+        <title>openstack-openvswitch流表学习</title>
+        <pubTime>2017-08-11T07:55:00.000Z</pubTime>
+        
+        <tag>openstack</tag>
+         
+        <tag>openvswitch</tag>
+         
+        <tag>ovs</tag>
+         
+        <tag>flow</tag>
+         
+         
+           
+             
+              <breadCrumb title="openstack" url="http://blog.motitan.com/categories/openstack/"/>
+          
+             
+              <breadCrumb title="openvswitch" url="http://blog.motitan.com/categories/openstack/openvswitch/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.motitan.com/2017/06/06/python-package-and-deploy/</loc>
     <lastmod>2017-06-06T08:18:20.000Z</lastmod>
     <data>
