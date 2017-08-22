@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2/</loc>
+    
+    <lastmod>2017-08-22T11:00:16.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1/</loc>
+    
+    <lastmod>2017-08-22T09:53:02.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.motitan.com/2017/08/11/openstack-openvswitch%E6%B5%81%E8%A1%A8%E5%AD%A6%E4%B9%A0/</loc>
     
     <lastmod>2017-08-15T09:39:39.000Z</lastmod>

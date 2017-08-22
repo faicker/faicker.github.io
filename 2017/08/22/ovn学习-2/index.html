@@ -1,0 +1,1047 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+  <meta name="baidu-site-verification" content="wtDZsmIFkr" />
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="openvswitch,ovs,ovn,ovsdb," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="faicker's个人博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="ovsdb协议
+基于json的RPC
+协议定义参考 https://www.rfc-editor.org/rfc/rfc7047.txt
+当前ovsdb-server实现是单线程，性能很低，HA只有主备。
+
+client库自带 C 和 Python的。其他开源的库有
+
+golanghttps://github.com/socketplane/libovsdb/blob/master/example">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ovn学习-2">
+<meta property="og:url" content="http://blog.motitan.com/2017/08/22/ovn学习-2/index.html">
+<meta property="og:site_name" content="faicker's个人博客">
+<meta property="og:description" content="ovsdb协议
+基于json的RPC
+协议定义参考 https://www.rfc-editor.org/rfc/rfc7047.txt
+当前ovsdb-server实现是单线程，性能很低，HA只有主备。
+
+client库自带 C 和 Python的。其他开源的库有
+
+golanghttps://github.com/socketplane/libovsdb/blob/master/example">
+<meta property="og:updated_time" content="2017-08-22T11:00:16.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ovn学习-2">
+<meta name="twitter:description" content="ovsdb协议
+基于json的RPC
+协议定义参考 https://www.rfc-editor.org/rfc/rfc7047.txt
+当前ovsdb-server实现是单线程，性能很低，HA只有主备。
+
+client库自带 C 和 Python的。其他开源的库有
+
+golanghttps://github.com/socketplane/libovsdb/blob/master/example">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.motitan.com/2017/08/22/ovn学习-2/"/>
+
+
+
+
+
+  <title> ovn学习-2 | faicker's个人博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?3e26c62c6d5c7cf6aed910e0948fb831";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">faicker's个人博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">关注云计算，网络虚拟化</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/08/22/ovn学习-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                ovn学习-2
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
+                2017-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/22/ovn学习-2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><ul>
+<li>基于json的RPC</li>
+<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt" target="_blank" rel="external">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
+<li>当前ovsdb-server实现是单线程，性能很低，HA只有主备。</li>
+</ul>
+<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
+<ul>
+<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
+<li>python<br>ovsdbapp</li>
+</ul>
+<p>以下是一个ovsdbapp使用的例子，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
+<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
+<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
+<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
+<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
+<pre><code>1. 初始时会把所有的内容返回来。
+2. 以后只会返回变化的。
+3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
+</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
+<a id="more"></a>
+<ul>
+<li>收到update通知消息，</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div></pre></td><td class="code"><pre><div class="line">[<span class="literal">null</span>, &#123;</div><div class="line">    <span class="attr">"Port"</span>: &#123;</div><div class="line">        <span class="attr">"5943a115-162f-484f-8e45-5cbf9cd112c5"</span>: &#123;</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"name"</span>: <span class="string">"abc"</span>,</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"vlan_mode"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"qos"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"trunks"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"mac"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"interfaces"</span>: [<span class="string">"uuid"</span>, <span class="string">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>],</div><div class="line">                <span class="attr">"bond_downdelay"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"bond_mode"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bond_updelay"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"bond_fake_iface"</span>: <span class="literal">false</span>,</div><div class="line">                <span class="attr">"tag"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"fake_bridge"</span>: <span class="literal">false</span>,</div><div class="line">                <span class="attr">"lacp"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"Bridge"</span>: &#123;</div><div class="line">        <span class="attr">"3d081a41-f691-41a6-a469-d0a0100fbf8c"</span>: &#123;</div><div class="line">            <span class="attr">"old"</span>: &#123;</div><div class="line">                <span class="attr">"ports"</span>: [<span class="string">"set"</span>, [</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"10c55211-94b2-4bc7-aefb-e524c3f1f7eb"</span>],</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"421029b9-2467-4946-bece-1e408524a2f9"</span>]</div><div class="line">                ]]</div><div class="line">            &#125;,</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"name"</span>: <span class="string">"br0"</span>,</div><div class="line">                <span class="attr">"flood_vlans"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"netflow"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"mirrors"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"datapath_id"</span>: <span class="string">"0000421a083da641"</span>,</div><div class="line">                <span class="attr">"controller"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ipfix"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"protocols"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"fail_mode"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ports"</span>: [<span class="string">"set"</span>, [</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"10c55211-94b2-4bc7-aefb-e524c3f1f7eb"</span>],</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"421029b9-2467-4946-bece-1e408524a2f9"</span>],</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"5943a115-162f-484f-8e45-5cbf9cd112c5"</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"flow_tables"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"sflow"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"datapath_type"</span>: <span class="string">""</span>,</div><div class="line">                <span class="attr">"stp_enable"</span>: <span class="literal">false</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"Interface"</span>: &#123;</div><div class="line">        <span class="attr">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>: &#123;</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"name"</span>: <span class="string">"abc"</span>,</div><div class="line">                <span class="attr">"options"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mtu"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_speed"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mac_in_use"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"type"</span>: <span class="string">"internal"</span>,</div><div class="line">                <span class="attr">"cfm_remote_opstate"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_rate"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mac"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ofport"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ifindex"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_fault_status"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"duplex"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"lacp_current"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_fault"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd_status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"link_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"admin_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_remote_mpids"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_burst"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"ofport_request"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_mpid"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_flap_count"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_resets"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_health"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"Open_vSwitch"</span>: &#123;</div><div class="line">        <span class="attr">"099e083f-aa09-4dd1-95d2-d0b4857eb3b9"</span>: &#123;</div><div class="line">            <span class="attr">"old"</span>: &#123;</div><div class="line">                <span class="attr">"next_cfg"</span>: <span class="number">70</span></div><div class="line">            &#125;,</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"manager_options"</span>: [<span class="string">"uuid"</span>, <span class="string">"28542e8a-9886-4282-8b43-afb5b80c0cc5"</span>],</div><div class="line">                <span class="attr">"bridges"</span>: [<span class="string">"set"</span>, [</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"3d081a41-f691-41a6-a469-d0a0100fbf8c"</span>],</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"558db8c8-bc39-4781-a441-f58e7dc6a951"</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"ssl"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"next_cfg"</span>: <span class="number">71</span>,</div><div class="line">                <span class="attr">"cur_cfg"</span>: <span class="number">70</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;]</div></pre></td></tr></table></figure>
+<ul>
+<li>创建接口，<code>bridge br0: added interface abc on port 10</code></li>
+<li>更新ovsdb，</li>
+</ul>
+<p>发送transact请求1，</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">[<span class="string">"Open_vSwitch"</span>, &#123;</div><div class="line">    <span class="attr">"lock"</span>: <span class="string">"ovs_vswitchd"</span>,</div><div class="line">    <span class="attr">"op"</span>: <span class="string">"assert"</span></div><div class="line">&#125;, &#123;</div><div class="line">    <span class="attr">"row"</span>: &#123;</div><div class="line">        <span class="attr">"ofport"</span>: <span class="number">10</span>,</div><div class="line">        <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, [</div><div class="line">            [<span class="string">"collisions"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_bytes"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_crc_err"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_dropped"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_errors"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_frame_err"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_over_err"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"rx_packets"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"tx_bytes"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"tx_dropped"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"tx_errors"</span>, <span class="number">0</span>],</div><div class="line">            [<span class="string">"tx_packets"</span>, <span class="number">0</span>]</div><div class="line">        ]]</div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"table"</span>: <span class="string">"Interface"</span>,</div><div class="line">    <span class="attr">"where"</span>: [</div><div class="line">        [<span class="string">"_uuid"</span>, <span class="string">"=="</span>, [<span class="string">"uuid"</span>, <span class="string">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>]]</div><div class="line">    ],</div><div class="line">    <span class="attr">"op"</span>: <span class="string">"update"</span></div><div class="line">&#125;, &#123;</div><div class="line">    <span class="attr">"row"</span>: &#123;</div><div class="line">        <span class="attr">"cur_cfg"</span>: <span class="number">71</span></div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"table"</span>: <span class="string">"Open_vSwitch"</span>,</div><div class="line">    <span class="attr">"where"</span>: [</div><div class="line">        [<span class="string">"_uuid"</span>, <span class="string">"=="</span>, [<span class="string">"uuid"</span>, <span class="string">"099e083f-aa09-4dd1-95d2-d0b4857eb3b9"</span>]]</div><div class="line">    ],</div><div class="line">    <span class="attr">"op"</span>: <span class="string">"update"</span></div><div class="line">&#125;]</div></pre></td></tr></table></figure>
+<p>请求2，</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">[<span class="string">"Open_vSwitch"</span>, &#123;</div><div class="line">    <span class="attr">"lock"</span>: <span class="string">"ovs_vswitchd"</span>,</div><div class="line">    <span class="attr">"op"</span>: <span class="string">"assert"</span></div><div class="line">&#125;, &#123;</div><div class="line">    <span class="attr">"row"</span>: &#123;</div><div class="line">        <span class="attr">"status"</span>: [<span class="string">"map"</span>, [</div><div class="line">            [<span class="string">"driver_name"</span>, <span class="string">"openvswitch"</span>]</div><div class="line">        ]],</div><div class="line">        <span class="attr">"mtu"</span>: <span class="number">1500</span>,</div><div class="line">        <span class="attr">"mac_in_use"</span>: <span class="string">"6e:2b:1b:5e:23:8f"</span>,</div><div class="line">        <span class="attr">"link_state"</span>: <span class="string">"down"</span>,</div><div class="line">        <span class="attr">"link_resets"</span>: <span class="number">0</span>,</div><div class="line">        <span class="attr">"admin_state"</span>: <span class="string">"down"</span>,</div><div class="line">        <span class="attr">"ifindex"</span>: <span class="number">22</span></div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"table"</span>: <span class="string">"Interface"</span>,</div><div class="line">    <span class="attr">"where"</span>: [</div><div class="line">        [<span class="string">"_uuid"</span>, <span class="string">"=="</span>, [<span class="string">"uuid"</span>, <span class="string">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>]]</div><div class="line">    ],</div><div class="line">    <span class="attr">"op"</span>: <span class="string">"update"</span></div><div class="line">&#125;]</div></pre></td></tr></table></figure>
+<ul>
+<li>收到update通知消息（因为上面的update transact），</li>
+</ul>
+<p>update通知消息1，</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div></pre></td><td class="code"><pre><div class="line">[<span class="literal">null</span>, &#123;</div><div class="line">    <span class="attr">"Interface"</span>: &#123;</div><div class="line">        <span class="attr">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>: &#123;</div><div class="line">            <span class="attr">"old"</span>: &#123;</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"ofport"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;,</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"name"</span>: <span class="string">"abc"</span>,</div><div class="line">                <span class="attr">"options"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mtu"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_speed"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, [</div><div class="line">                    [<span class="string">"collisions"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_bytes"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_crc_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_dropped"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_errors"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_frame_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_over_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_packets"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_bytes"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_dropped"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_errors"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_packets"</span>, <span class="number">0</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"mac_in_use"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"type"</span>: <span class="string">"internal"</span>,</div><div class="line">                <span class="attr">"cfm_remote_opstate"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_rate"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mac"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ofport"</span>: <span class="number">10</span>,</div><div class="line">                <span class="attr">"ifindex"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_fault_status"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"duplex"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"lacp_current"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_fault"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd_status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"link_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"admin_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_remote_mpids"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_burst"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"ofport_request"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_mpid"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_flap_count"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_resets"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_health"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;,</div><div class="line">    <span class="attr">"Open_vSwitch"</span>: &#123;</div><div class="line">        <span class="attr">"099e083f-aa09-4dd1-95d2-d0b4857eb3b9"</span>: &#123;</div><div class="line">            <span class="attr">"old"</span>: &#123;</div><div class="line">                <span class="attr">"cur_cfg"</span>: <span class="number">70</span></div><div class="line">            &#125;,</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"manager_options"</span>: [<span class="string">"uuid"</span>, <span class="string">"28542e8a-9886-4282-8b43-afb5b80c0cc5"</span>],</div><div class="line">                <span class="attr">"bridges"</span>: [<span class="string">"set"</span>, [</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"3d081a41-f691-41a6-a469-d0a0100fbf8c"</span>],</div><div class="line">                    [<span class="string">"uuid"</span>, <span class="string">"558db8c8-bc39-4781-a441-f58e7dc6a951"</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"ssl"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"next_cfg"</span>: <span class="number">71</span>,</div><div class="line">                <span class="attr">"cur_cfg"</span>: <span class="number">71</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;]</div></pre></td></tr></table></figure>
+<p>update通知消息2，</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line">[<span class="literal">null</span>, &#123;</div><div class="line">    <span class="attr">"Interface"</span>: &#123;</div><div class="line">        <span class="attr">"9fb84aa6-ac6e-4575-b4e7-0cc87c755195"</span>: &#123;</div><div class="line">            <span class="attr">"old"</span>: &#123;</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mtu"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"mac_in_use"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"admin_state"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_resets"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ifindex"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;,</div><div class="line">            <span class="attr">"new"</span>: &#123;</div><div class="line">                <span class="attr">"name"</span>: <span class="string">"abc"</span>,</div><div class="line">                <span class="attr">"options"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"mtu"</span>: <span class="number">1500</span>,</div><div class="line">                <span class="attr">"link_speed"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"statistics"</span>: [<span class="string">"map"</span>, [</div><div class="line">                    [<span class="string">"collisions"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_bytes"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_crc_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_dropped"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_errors"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_frame_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_over_err"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"rx_packets"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_bytes"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_dropped"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_errors"</span>, <span class="number">0</span>],</div><div class="line">                    [<span class="string">"tx_packets"</span>, <span class="number">0</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"mac_in_use"</span>: <span class="string">"6e:2b:1b:5e:23:8f"</span>,</div><div class="line">                <span class="attr">"type"</span>: <span class="string">"internal"</span>,</div><div class="line">                <span class="attr">"cfm_remote_opstate"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_rate"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"status"</span>: [<span class="string">"map"</span>, [</div><div class="line">                    [<span class="string">"driver_name"</span>, <span class="string">"openvswitch"</span>]</div><div class="line">                ]],</div><div class="line">                <span class="attr">"mac"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ofport"</span>: <span class="number">10</span>,</div><div class="line">                <span class="attr">"ifindex"</span>: <span class="number">22</span>,</div><div class="line">                <span class="attr">"cfm_fault_status"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"duplex"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"lacp_current"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_fault"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd_status"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"link_state"</span>: <span class="string">"down"</span>,</div><div class="line">                <span class="attr">"admin_state"</span>: <span class="string">"down"</span>,</div><div class="line">                <span class="attr">"other_config"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_remote_mpids"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"ingress_policing_burst"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"ofport_request"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"bfd"</span>: [<span class="string">"map"</span>, []],</div><div class="line">                <span class="attr">"cfm_mpid"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"cfm_flap_count"</span>: [<span class="string">"set"</span>, []],</div><div class="line">                <span class="attr">"link_resets"</span>: <span class="number">0</span>,</div><div class="line">                <span class="attr">"cfm_health"</span>: [<span class="string">"set"</span>, []]</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;]</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/openvswitch/" rel="tag"># openvswitch</a>
+          
+            <a href="/tags/ovs/" rel="tag"># ovs</a>
+          
+            <a href="/tags/ovn/" rel="tag"># ovn</a>
+          
+            <a href="/tags/ovsdb/" rel="tag"># ovsdb</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/11/openstack-openvswitch流表学习/" rel="next" title="openstack-openvswitch流表学习">
+                <i class="fa fa-chevron-left"></i> openstack-openvswitch流表学习
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/22/ovn学习-1/" rel="prev" title="ovn学习-1">
+                ovn学习-1 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="faicker" />
+          <p class="site-author-name" itemprop="name">faicker</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+           
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ovsdb协议"><span class="nav-number">1.</span> <span class="nav-text">ovsdb协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#client库"><span class="nav-number">2.</span> <span class="nav-text">client库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协议交互举例"><span class="nav-number">3.</span> <span class="nav-text">协议交互举例</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">faicker</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'faicker';
+      var disqus_identifier = '2017/08/22/ovn学习-2/';
+
+      var disqus_title = "ovn学习-2";
+
+
+      function run_disqus_script(disqus_script) {
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+
+      
+        var disqus_config = function () {
+            this.page.url = disqus_url;
+            this.page.identifier = disqus_identifier;
+            this.page.title = disqus_title;
+        };
+        run_disqus_script('embed.js');
+      
+
+    </script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+
+  
+
+</body>
+</html>

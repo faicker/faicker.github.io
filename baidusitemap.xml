@@ -4,6 +4,62 @@
 
     
   <url>
+    <loc>http://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2/</loc>
+    <lastmod>2017-08-22T11:00:16.000Z</lastmod>
+    <data>
+        <display>
+        <title>ovn学习-2</title>
+        <pubTime>2017-08-22T10:00:00.000Z</pubTime>
+        
+        <tag>openvswitch</tag>
+         
+        <tag>ovs</tag>
+         
+        <tag>ovn</tag>
+         
+        <tag>ovsdb</tag>
+         
+         
+           
+             
+              <breadCrumb title="ovn" url="http://blog.motitan.com/categories/ovn/"/>
+          
+             
+              <breadCrumb title="openvswitch" url="http://blog.motitan.com/categories/ovn/openvswitch/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1/</loc>
+    <lastmod>2017-08-22T09:53:02.000Z</lastmod>
+    <data>
+        <display>
+        <title>ovn学习-1</title>
+        <pubTime>2017-08-22T10:00:00.000Z</pubTime>
+        
+        <tag>openvswitch</tag>
+         
+        <tag>ovs</tag>
+         
+        <tag>ovn</tag>
+         
+         
+           
+             
+              <breadCrumb title="ovn" url="http://blog.motitan.com/categories/ovn/"/>
+          
+             
+              <breadCrumb title="openvswitch" url="http://blog.motitan.com/categories/ovn/openvswitch/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.motitan.com/2017/08/11/openstack-openvswitch%E6%B5%81%E8%A1%A8%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2017-08-15T09:39:39.000Z</lastmod>
     <data>
