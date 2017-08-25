@@ -96,7 +96,7 @@
 heroku的app不能直接用作代理，因为访问heroku app大概路径是，xxx.herokuapp.com解析到了heroku的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="用nginx和heroku实现一个免费的http proxy">
-<meta property="og:url" content="http://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/index.html">
+<meta property="og:url" content="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
 <meta property="og:description" content="用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。
 首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如xxx.herokuapp.com，同时还支持SSL访问，这个是关键。
@@ -115,7 +115,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
   var CONFIG = {
     root: '/',
     scheme: 'Pisces',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":true,"scrollpercent":false},
     fancybox: true,
     motion: true,
     duoshuo: {
@@ -134,7 +134,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
 
 
 
-  <link rel="canonical" href="http://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/"/>
+  <link rel="canonical" href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/"/>
 
 
 
@@ -221,6 +221,16 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
         </li>
       
         
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
@@ -303,7 +313,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -446,6 +456,21 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
     <div>
       
         
+  <ul class="post-copyright">
+    <li class="post-copyright-author">
+      <strong>本文作者：</strong>
+      faicker
+    </li>
+    <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" title="用nginx和heroku实现一个免费的http proxy">https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/</a>
+    </li>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong>
+      本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+
 
       
     </div>
@@ -644,6 +669,11 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
       
 
       
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+        </div>
+      
 
     </div>
   </aside>
@@ -681,11 +711,6 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
       </div>
     </footer>
 
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
     
     
   </div>

@@ -99,7 +99,7 @@ https://docs.openstack.org/ocata/networking-guide/deploy-ovs-selfservice.html#ea
 flow分析这里只分析flow（n">
 <meta property="og:type" content="article">
 <meta property="og:title" content="openstack-openvswitch流表学习">
-<meta property="og:url" content="http://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/index.html">
+<meta property="og:url" content="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
 <meta property="og:description" content="前言openstack版本是ocata，操作系统是ubuntu 1604.3。
 架构图逻辑架构图在这里
@@ -124,7 +124,7 @@ flow分析这里只分析flow（n">
   var CONFIG = {
     root: '/',
     scheme: 'Pisces',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":true,"scrollpercent":false},
     fancybox: true,
     motion: true,
     duoshuo: {
@@ -143,7 +143,7 @@ flow分析这里只分析flow（n">
 
 
 
-  <link rel="canonical" href="http://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/"/>
+  <link rel="canonical" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/"/>
 
 
 
@@ -230,6 +230,16 @@ flow分析这里只分析flow（n">
         </li>
       
         
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
@@ -312,7 +322,7 @@ flow分析这里只分析flow（n">
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -458,6 +468,21 @@ flow分析这里只分析flow（n">
     <div>
       
         
+  <ul class="post-copyright">
+    <li class="post-copyright-author">
+      <strong>本文作者：</strong>
+      faicker
+    </li>
+    <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/" title="openstack-openvswitch流表学习">https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/</a>
+    </li>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong>
+      本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+
 
       
     </div>
@@ -495,8 +520,8 @@ flow分析这里只分析flow（n">
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/08/22/ovn学习-2/" rel="prev" title="ovn学习-2">
-                ovn学习-2 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/08/22/ovn学习-1/" rel="prev" title="ovn学习-1">
+                ovn学习-1 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -687,6 +712,11 @@ flow分析这里只分析flow（n">
       
 
       
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+        </div>
+      
 
     </div>
   </aside>
@@ -724,11 +754,6 @@ flow分析这里只分析flow（n">
       </div>
     </footer>
 
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
     
     
   </div>
