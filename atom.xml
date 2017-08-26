@@ -96,9 +96,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="ovsdb" scheme="https://blog.motitan.com/tags/ovsdb/"/>
     
@@ -152,9 +152,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
   </entry>
   
@@ -188,9 +188,9 @@
       <category term="openvswitch" scheme="https://blog.motitan.com/categories/openstack/openvswitch/"/>
     
     
-      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
-    
       <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
     

@@ -14,9 +14,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovn</tag>
-         
         <tag>ovs</tag>
+         
+        <tag>ovn</tag>
          
         <tag>ovsdb</tag>
          
@@ -43,9 +43,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovn</tag>
-         
         <tag>ovs</tag>
+         
+        <tag>ovn</tag>
          
          
            
@@ -68,9 +68,9 @@
         <title>openstack-openvswitch流表学习</title>
         <pubTime>2017-08-11T07:55:00.000Z</pubTime>
         
-        <tag>openvswitch</tag>
-         
         <tag>openstack</tag>
+         
+        <tag>openvswitch</tag>
          
         <tag>ovs</tag>
          
