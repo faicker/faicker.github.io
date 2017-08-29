@@ -308,6 +308,193 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/04/15/python性能分析工具之pyflame/" itemprop="url">
+                  python性能分析工具之pyflame
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-15T22:30:00+08:00">
+                2017-04-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index">
+                    <span itemprop="name">python</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/pyflame/" itemprop="url" rel="index">
+                    <span itemprop="name">pyflame</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/pyflame/profile/" itemprop="url" rel="index">
+                    <span itemprop="name">profile</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/04/15/python性能分析工具之pyflame/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/04/15/python性能分析工具之pyflame/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>这篇文章<a href="http://www.cnblogs.com/xybaby/p/6510941.html">python性能优化</a>总结的比较好，可以先看这篇的介绍。</p>
+<p>里面介绍了针对不同场景使用的工具，</p>
+<blockquote>
+<p>对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。<br>其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotshot对目标代码的运行影响较小，代价是更多的后处理时间，而且hotshot已经停止维护了。需要注意的是，profile（Cprofile hotshot）只适合单线程的python程序。<br>对于多线程，可以使用yappi，yappi不仅支持多线程，还可以精确到CPU时间<br>对于协程（greenlet），可以使用greenletprofiler，基于yappi修改，用greenlet context hook住thread context。</p>
+</blockquote>
+<p>profile的结果可以用<a href="https://github.com/jrfonseca/gprof2dot">gprof2dot</a>生成函数调用开销图，进行分析。</p>
+<p>这里介绍另外一个好用的工具pyflame。对单线程，多线程，协程支持都很好，使用简单，不用修改源码，直接profile运行的进程。效率较高，进程运行只会慢3倍左右，建议非线上环境使用。最最关键的是可以直接生成<a href="https://github.com/brendangregg/FlameGraph">火焰图</a>，具体介绍可以看github链接<a href="https://github.com/uber/pyflame">pyflame</a>。<br>火焰图怎么看先google学习下，比gprof2dot的图更清晰明了。</p>
+<hr>
+<p>pyflame的安装步骤在github上介绍的很详细，对centos7也是适用的。这里介绍下内核较老的centos6+python2.6下面的安装（是一个C API 缺失<a href="http://hustcat.github.io/setns/">setns</a>）。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/04/15/python性能分析工具之pyflame/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/03/11/install-openvswitch2.7.0-and-ovn-on-centos7/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1035,7 +1222,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1057,7 +1244,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

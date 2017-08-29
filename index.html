@@ -308,7 +308,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/29/ovn学习-3-流表分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -330,8 +330,221 @@
             
               
                 
-                <a class="post-title-link" href="/2017/08/22/ovn学习-2/" itemprop="url">
-                  ovn学习-2
+                <a class="post-title-link" href="/2017/08/29/ovn学习-3-流表分析/" itemprop="url">
+                  ovn学习-3-流表分析
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-29T18:00:00+08:00">
+                2017-08-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/29/ovn学习-3-流表分析/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/29/ovn学习-3-流表分析/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p><strong>Hypervisor</strong>是运行ovs的，比如libvirtd。<br><strong>gateway</strong>，连接logic network和physical network。<br>Hypervisors和gateways都称之为<strong>chassis</strong>。<br><strong>logic network</strong>,<br><strong>Logical switches</strong>, the logical version of Ethernet switches<br><strong>Logical routers</strong>, the logical version of IP routers<br><strong>Logical datapaths</strong>, the logical version of an OpenFlow switch. Logical switches and routers are both implemented as logical datapaths<br><strong>Logical ports</strong>,</p>
+<ol>
+<li><strong>Logical ports</strong> representing VIFs  </li>
+<li><strong>Localnet ports</strong> represent the points of connectivity between logical switches and the physical network</li>
+<li><strong>Logical  patch  ports</strong>  represent  the  points  of  connectivity between logical switches and logical routers,and in some cases between peer logical routers</li>
+</ol>
+<p><strong>gateway router</strong>, 物理位置（chassis）绑定的。可支持<code>1-to-N</code> nat。<code>Port_Binding</code>里port type是l3gateway。比如这里的edge1。如果要在gateway router上面配置snat或者dnat规则，和distributed router连接必须通过switch。NAT rules only work on Gateway routers, and on distributed routers with one logical router port with a redirect-chassis specified.<br><strong>distributed router</strong>，<br><strong>Distributed Gateway Port</strong> is logic network gateway。</p>
+<h2 id="寄存器使用介绍"><a href="#寄存器使用介绍" class="headerlink" title="寄存器使用介绍"></a>寄存器使用介绍</h2><ol>
+<li>tunnel key</li>
+<li>logical datapath field，一个logic switch/logic router就是一个logic datapath，存储在metadata寄存器里</li>
+<li>logical input port field，存储在reg14里</li>
+<li>logical output port field，存储在reg15里</li>
+<li>conntrack zone field for logical ports，存储在reg13里</li>
+<li>conntrack zone fields for routers，dnat在reg11里，snat在reg12里</li>
+<li>logical flow flags，存储在reg10里</li>
+<li>VLAN ID</li>
+</ol>
+<h2 id="整体流表处理"><a href="#整体流表处理" class="headerlink" title="整体流表处理"></a>整体流表处理</h2><p>一开始，VM发出来一个包进入ovs，然后，</p>
+<ol>
+<li>在table 0里，匹配了in_port，做了一个物理到逻辑的转换。设置logical datapath field，logical input port，跳到table 16。如果是VM里容器发出来的包，会用vlan id来区分，并strip vlan，然后就跟上面的一样了。table 0也会处理从隧道进来的包，也会设置logical datapath field，logical input port，还会设置logical output port（因为是先知道了logical output port，再做的隧道封装），这些信息是从tun metadata获取的。然后跳到table 33。</li>
+<li>table 16到31执行sb db里<code>Logical_Flow</code>表的逻辑，ingress方向。对应<code>Logical_Flow</code>表里的table 0到15。每一条logic flow对应一条或者多条实际flow。包可能只匹配其中的一条，也可能匹配多条（action是一样的）。ovn-controller使用logic flow的UUID的前32bit作为flow里的cookie值。一些logic flow可能对应到ovs里的conjunctive match，使用的cookie值是0。大多数logic flow里的action都在openflow里有对应的实现。比如next对应resubmit。以下是一些特别的，1）output: 通过resubmit到table 32实现。如果output有多个，也会resubmit多次。2）<code>get_arp(P, A)/get_nd(P, A)</code>：通过保存一些值，resubmit到table 66实现。table 66里的flow是sb db里MAC_Binding表生成的。3） <code>put_arp(P, A, E)/put_nd(P, A, E)</code>：通过保存一些值，发送包给ovn-controller，ovn-controller会更新<code>MAC_Binding</code>表。gateway连接外部网络时学习到的。</li>
+<li>table 32到47实现的是logic ingress的output逻辑。table=32处理发送到其他hypervisor的包&lt;从隧道口output&gt;，table=33处理发送给本地hypervisor的包，table=34检查包的逻辑ingress和egress port是否一样，如果一样，则丢弃。1）table=32里面的flow包括单播和多播处理。设置值并单播发送给其他hypervisor；多播同样，只是发送多份。default跳到table 33。2）table=33处理logic port是本地的包。resubmit到34，如果是多播的，会更改logic port，resubmit到34多次。3）table=34，loopback检查（<code>MLF_ALLOW_LOOPBACK</code>标志），并resubmit到table 48处理。</li>
+<li>table 48到63执行的是sb db的<code>Logical_Flow</code>表的逻辑，egress方向。通过resubmit到table 64，执行output action。egress处理里不能更改logic output port和做隧道封装。</li>
+<li>table 64会检查loopback（<code>MLF_ALLOW_LOOPBACK</code>标志），openflow默认禁止loopback（除非使用<code>IN_PORT</code> action）。如果<code>MLF_ALLOW_LOOPBACK</code>设置了，会保存<code>in_port</code>值，清空<code>in_port</code>寄存器，resubmit到table 65，绕过openflow限制。</li>
+<li>table 65执行逻辑到物理的转换，跟table 0相反。匹配逻辑端口，发送到本地bridge里的物理端口。如果是VM内的容器，则会加上vlan再发送。</li>
+</ol>
+<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><ul>
+<li><a href="http://blog.spinhirne.com/2016/09/a-primer-on-ovn.html">A Primer on OVN</a></li>
+<li><a href="http://blog.spinhirne.com/2016/09/an-introduction-to-ovn-routing.html">An Introduction to OVN Routing</a></li>
+<li><a href="http://blog.spinhirne.com/2016/09/the-ovn-gateway-router.html">The OVN Gateway Router</a></li>
+</ul>
+<h3 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">    physical network</div><div class="line">         |</div><div class="line">      outside(sw)</div><div class="line">         |          &lt;10.127.0.129/25&gt;</div><div class="line">       edge1(gr)    &lt;172.16.255.1/30&gt;</div><div class="line">         |         </div><div class="line">     transit(join sw)</div><div class="line">         |          &lt;172.16.255.2/30&gt;</div><div class="line">      tenant1(dr)   &lt;172.16.255.129/26，172.16.255.193/26&gt;</div><div class="line">     /        \</div><div class="line">  dmz(sw)    inside(sw)</div><div class="line">  /  |  \       /  \</div><div class="line">vm1 vm2 vm5   vm3 vm4</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host1，vm1（02:ac:10:ff:01:30/172.16.255.130） vm3（02:ac:10:ff:01:94/172.16.255.194） vm5（02:ac:10:ff:01:32/172.16.255.132）</div><div class="line">host2，vm2（02:ac:10:ff:01:31/172.16.255.131） vm4（02:ac:10:ff:01:95/172.16.255.195）</div></pre></td></tr></table></figure>
+<h3 id="寄存器值"><a href="#寄存器值" class="headerlink" title="寄存器值"></a>寄存器值</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">metadata = tun_id</div><div class="line">0x6 dmz</div><div class="line">0x5 inside</div><div class="line">0x4 transit</div><div class="line">0x7 tenant1</div><div class="line">0x8 outside</div><div class="line">0x3 edge1</div><div class="line"></div><div class="line">reg14,</div><div class="line">dmz,</div><div class="line">vm1 reg14=0x2</div><div class="line">vm5 reg14=0x4</div><div class="line">vm2 reg14=0x3</div><div class="line">dmz-tenant1 reg14=0x1</div><div class="line"></div><div class="line">inside,</div><div class="line">vm3 reg14=0x2</div><div class="line">vm4  reg14=0x3</div><div class="line">inside-tenant1 reg14=0x1</div><div class="line"></div><div class="line">tenant1,</div><div class="line">tenant1-transit reg14=0x3</div><div class="line">tenant1-dmz reg14=0x1</div><div class="line">tenant1-inside reg14=0x2</div><div class="line"></div><div class="line">transit,</div><div class="line">transit-tenant1, 0x2</div><div class="line">transit-edge1, 0x1</div><div class="line"></div><div class="line">edge1,</div><div class="line">edge1-outside 0x2</div><div class="line">edge1-transit 0x1</div></pre></td></tr></table></figure>
+<h3 id="逻辑流表分析"><a href="#逻辑流表分析" class="headerlink" title="逻辑流表分析"></a>逻辑流表分析</h3><p>从vm1 ping vm4，<br>ovn-sbctl dump-flows，<br>dmz datapath ingress logic flow，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">table=16，L2 安全验证。in_port和源mac是否匹配。</div><div class="line">table=17，L3 安全验证。dhcp放行，源mac和源ip是否匹配。</div><div class="line">table=18，arp/nd 安全验证。</div><div class="line">安全验证可以关闭，ovn-nbctl lsp-set-port-security</div><div class="line">table=19，pre_acl，放行dmz-tenant1进来的包，如果是local的port发出来的，则reg0[0]=1，比如vm1。</div><div class="line">table=20，pre_lb。</div><div class="line">table=21，pre_stateful。如果是reg0[0]=1，则过ct，跳到22，否则跳22。</div><div class="line">table=22，出向acl，acl是作用在整个logic datapath上的，这里是stateful的acl（from-lport drop）</div><div class="line">    ovn-nbctl acl-list dmz</div><div class="line">    from-lport     0 (udp.dst==1234) drop</div><div class="line">      to-lport   100 (tcp.dst==22) allow-related</div><div class="line">      to-lport   100 (tcp.dst==23) allow-related</div><div class="line">    drop并不是没有状态的，flow里ct_label用来做是否由于policy change导致要drop packet。</div><div class="line">table=23，qos_mark</div><div class="line">table=24，lb</div><div class="line">table=25，stateful</div><div class="line">table=26，arp response，如果是arp代答，reg10=0x1，跳32，如果是garp则next。</div><div class="line">table=27，dhcp，dhcp参数写到了flow里，送给controller，controller可以直接回。</div><div class="line">table=28，dhcp dhcp应答，跳32</div><div class="line">table=29，l2查找（整个datapath），如果是多播，设置outport是多播的(reg15=0xffff)，跳32；本地vm的单播，设置对应的outport（逻辑的，包括网关），跳32；这里reg15=0x1</div><div class="line">reg15=0xfffe, unknown</div></pre></td></tr></table></figure>
+<p>dmz datapath egress logic flow，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">table=48，pre_lb，next</div><div class="line">table=49，pre_acl，不是去dmz-tenant1的设置reg0[0] = 1</div><div class="line">table=50，pre_stateful，reg0[0] = 1，ct_next</div><div class="line">table=51，lb</div><div class="line">table=52，acl，dhcp的应答放行。</div><div class="line">table=53，qos_mark</div><div class="line">table=54，stateful</div><div class="line">table=55，port_sec_ip，目的安全验证。目的mac和IP是否匹配。</div><div class="line">table=56，port_sec_l2，目的mac和目的port是否匹配。</div><div class="line"></div><div class="line">table=32，33，34见上面的介绍。</div><div class="line">table=64，65见上面的介绍。</div><div class="line">table=65，如果目的port是网关，会修改metadata=0x7，reg14=0x1，reg15=0x0，重新跳到16。</div><div class="line">metadata=0x7就是logic router tenant1的逻辑了。</div></pre></td></tr></table></figure>
+<p>tenant1 ingress logic flow，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">table=21，ip_routing，匹配目的段，ttl-1，修改源mac，设置outport=tenant1-inside，reg15=0x2</div><div class="line">table=22，arp_resolve，根据outport&lt;reg15&gt;和目的IP&lt;reg0&gt;，修改目的mac。</div></pre></td></tr></table></figure>
+<p>tenant1 egress logic flow，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">table=65，修改metadata=0x5，reg14=0x1，reg15=0x0，重新跳到16。</div></pre></td></tr></table></figure>
+<p>inside ingress logic flow，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">table=32,从隧道发出去。</div></pre></td></tr></table></figure>
+<p>host2上，<br>inside egress logic flow，</p>
+<p>跨网段互访，总共有3次traverse。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/29/ovn学习-3-流表分析/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
+                  ovn学习-2-ovsdb
                 </a>
               
             
@@ -399,8 +612,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/08/22/ovn学习-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2/" itemprop="commentCount"></span>
+                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -449,7 +662,7 @@
 </code></pre><p>ovs-vswitchd消息处理过程如下，</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/08/22/ovn学习-2/#more" rel="contents">
+            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -495,7 +708,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -517,8 +730,8 @@
             
               
                 
-                <a class="post-title-link" href="/2017/08/22/ovn学习-1/" itemprop="url">
-                  ovn学习-1
+                <a class="post-title-link" href="/2017/08/22/ovn学习-1-配置同步/" itemprop="url">
+                  ovn学习-1-配置同步
                 </a>
               
             
@@ -586,8 +799,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/08/22/ovn学习-1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-1/" itemprop="commentCount"></span>
+                <a href="/2017/08/22/ovn学习-1-配置同步/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-1-配置同步/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -1028,193 +1241,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/04/15/python性能分析工具之pyflame/" itemprop="url">
-                  python性能分析工具之pyflame
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-15T22:30:00+08:00">
-                2017-04-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index">
-                    <span itemprop="name">python</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/pyflame/" itemprop="url" rel="index">
-                    <span itemprop="name">pyflame</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/pyflame/profile/" itemprop="url" rel="index">
-                    <span itemprop="name">profile</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/04/15/python性能分析工具之pyflame/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/04/15/python性能分析工具之pyflame/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>这篇文章<a href="http://www.cnblogs.com/xybaby/p/6510941.html">python性能优化</a>总结的比较好，可以先看这篇的介绍。</p>
-<p>里面介绍了针对不同场景使用的工具，</p>
-<blockquote>
-<p>对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。<br>其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotshot对目标代码的运行影响较小，代价是更多的后处理时间，而且hotshot已经停止维护了。需要注意的是，profile（Cprofile hotshot）只适合单线程的python程序。<br>对于多线程，可以使用yappi，yappi不仅支持多线程，还可以精确到CPU时间<br>对于协程（greenlet），可以使用greenletprofiler，基于yappi修改，用greenlet context hook住thread context。</p>
-</blockquote>
-<p>profile的结果可以用<a href="https://github.com/jrfonseca/gprof2dot">gprof2dot</a>生成函数调用开销图，进行分析。</p>
-<p>这里介绍另外一个好用的工具pyflame。对单线程，多线程，协程支持都很好，使用简单，不用修改源码，直接profile运行的进程。效率较高，进程运行只会慢3倍左右，建议非线上环境使用。最最关键的是可以直接生成<a href="https://github.com/brendangregg/FlameGraph">火焰图</a>，具体介绍可以看github链接<a href="https://github.com/uber/pyflame">pyflame</a>。<br>火焰图怎么看先google学习下，比gprof2dot的图更清晰明了。</p>
-<hr>
-<p>pyflame的安装步骤在github上介绍的很详细，对centos7也是适用的。这里介绍下内核较老的centos6+python2.6下面的安装（是一个C API 缺失<a href="http://hustcat.github.io/setns/">setns</a>）。<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/04/15/python性能分析工具之pyflame/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1264,7 +1290,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1286,7 +1312,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

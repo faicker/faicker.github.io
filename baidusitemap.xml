@@ -3,13 +3,12 @@
 
 
     
-    
   <url>
-    <loc>https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2/</loc>
-    <lastmod>2017-08-22T11:00:16.000Z</lastmod>
+    <loc>https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2-ovsdb/</loc>
+    <lastmod>2017-08-29T12:31:00.000Z</lastmod>
     <data>
         <display>
-        <title>ovn学习-2</title>
+        <title>ovn学习-2-ovsdb</title>
         <pubTime>2017-08-22T10:00:00.000Z</pubTime>
         
         <tag>openvswitch</tag>
@@ -34,11 +33,11 @@
 
     
   <url>
-    <loc>https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1/</loc>
-    <lastmod>2017-08-22T09:53:02.000Z</lastmod>
+    <loc>https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/</loc>
+    <lastmod>2017-08-29T12:30:51.000Z</lastmod>
     <data>
         <display>
-        <title>ovn学习-1</title>
+        <title>ovn学习-1-配置同步</title>
         <pubTime>2017-08-22T10:00:00.000Z</pubTime>
         
         <tag>openvswitch</tag>
@@ -59,6 +58,36 @@
     </data>
     </url>
 
+    
+  <url>
+    <loc>https://blog.motitan.com/2017/08/29/ovn%E5%AD%A6%E4%B9%A0-3-%E6%B5%81%E8%A1%A8%E5%88%86%E6%9E%90/</loc>
+    <lastmod>2017-08-29T12:29:36.000Z</lastmod>
+    <data>
+        <display>
+        <title>ovn学习-3-流表分析</title>
+        <pubTime>2017-08-29T10:00:00.000Z</pubTime>
+        
+        <tag>openvswitch</tag>
+         
+        <tag>ovs</tag>
+         
+        <tag>ovn</tag>
+         
+        <tag>openflow</tag>
+         
+         
+           
+             
+              <breadCrumb title="ovn" url="https://blog.motitan.com/categories/ovn/"/>
+          
+             
+              <breadCrumb title="openvswitch" url="https://blog.motitan.com/categories/ovn/openvswitch/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
     
   <url>
     <loc>https://blog.motitan.com/2017/08/11/openstack-openvswitch%E6%B5%81%E8%A1%A8%E5%AD%A6%E4%B9%A0/</loc>
