@@ -73,7 +73,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="nginx,heroku,http proxy," />
+  <meta name="keywords" content="openvswitch,ovn,ovs,openflow," />
 
 
 
@@ -91,22 +91,19 @@
 
 
 
-<meta name="description" content="用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。
-首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如xxx.herokuapp.com，同时还支持SSL访问，这个是关键。
-heroku的app不能直接用作代理，因为访问heroku app大概路径是，xxx.herokuapp.com解析到了heroku的">
+<meta name="description" content="前言localnet port，动态学习ip-mac关系，不走内核，存储在MAC_Binding表里。
+分析过程是这样的，logic router确定了nexthop的转发端口，用get_arp action来查找nexthop的mac是否已经学习到（在table 66里面）。如果没有，则使用arp action（在table=24里）从转发端口广播一个arp request，logic swit">
 <meta property="og:type" content="article">
-<meta property="og:title" content="用nginx和heroku实现一个免费的http proxy">
-<meta property="og:url" content="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/index.html">
+<meta property="og:title" content="ovn学习-4-mac学习">
+<meta property="og:url" content="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/index.html">
 <meta property="og:site_name" content="faicker's个人博客">
-<meta property="og:description" content="用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。
-首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如xxx.herokuapp.com，同时还支持SSL访问，这个是关键。
-heroku的app不能直接用作代理，因为访问heroku app大概路径是，xxx.herokuapp.com解析到了heroku的">
-<meta property="og:updated_time" content="2017-03-11T02:35:59.000Z">
+<meta property="og:description" content="前言localnet port，动态学习ip-mac关系，不走内核，存储在MAC_Binding表里。
+分析过程是这样的，logic router确定了nexthop的转发端口，用get_arp action来查找nexthop的mac是否已经学习到（在table 66里面）。如果没有，则使用arp action（在table=24里）从转发端口广播一个arp request，logic swit">
+<meta property="og:updated_time" content="2017-09-01T01:40:28.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="用nginx和heroku实现一个免费的http proxy">
-<meta name="twitter:description" content="用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。
-首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如xxx.herokuapp.com，同时还支持SSL访问，这个是关键。
-heroku的app不能直接用作代理，因为访问heroku app大概路径是，xxx.herokuapp.com解析到了heroku的">
+<meta name="twitter:title" content="ovn学习-4-mac学习">
+<meta name="twitter:description" content="前言localnet port，动态学习ip-mac关系，不走内核，存储在MAC_Binding表里。
+分析过程是这样的，logic router确定了nexthop的转发端口，用get_arp action来查找nexthop的mac是否已经学习到（在table 66里面）。如果没有，则使用arp action（在table=24里）从转发端口广播一个arp request，logic swit">
 
 
 
@@ -134,13 +131,13 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
 
 
 
-  <link rel="canonical" href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/"/>
+  <link rel="canonical" href="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/"/>
 
 
 
 
 
-  <title> 用nginx和heroku实现一个免费的http proxy | faicker's个人博客 </title>
+  <title> ovn学习-4-mac学习 | faicker's个人博客 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -313,7 +310,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -334,7 +331,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
             
             
               
-                用nginx和heroku实现一个免费的http proxy
+                ovn学习-4-mac学习
               
             
           </h2>
@@ -349,8 +346,8 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-09-14T23:24:03+08:00">
-                2014-09-14
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-31T18:00:00+08:00">
+                2017-08-31
               </time>
             
 
@@ -372,8 +369,19 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/proxy/" itemprop="url" rel="index">
-                    <span itemprop="name">proxy</span>
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
                   </a>
                 </span>
 
@@ -390,8 +398,8 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2014/09/14/用nginx和heroku实现一个免费的http-proxy/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/14/用nginx和heroku实现一个免费的http-proxy/" itemprop="commentCount"></span>
+                <a href="/2017/08/31/ovn学习-4-mac学习/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/31/ovn学习-4-mac学习/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -417,24 +425,10 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
       
 
       
-        <p>用nginx做forward proxy，借助于免费又支持SSL的heroku app，实现http proxy。</p>
-<p>首先申请一个免费的heroku app做测试，heroku会分配一个域名，比如<code>xxx.herokuapp.com</code>，同时还支持SSL访问，这个是关键。</p>
-<p>heroku的app不能直接用作代理，因为访问heroku app大概路径是，<br><code>xxx.herokuapp.com</code>解析到了heroku的前端nginx集群，然后再反向代理到自己的app。nginx会检查Host是否是heroku的app，不是的话会报404  Object Not Found。</p>
-<p>思路是，</p>
-<p>把要访问的网站嵌入到url里，比如<code>http://xxx.herokuapp.com/p/www.google.com</code>，然后我们在app里去请求www.google.com，然后把结果返回（包括response headers），这样我们访问<code>http://xxx.herokuapp.com/p/www.google.com</code>返回了google的内容！可以把这个app强化一下，处理一下refer，url等，完全就是heroku app的壳，里面套了其他网站的内容。</p>
-<p>为了偷懒，简化这里的处理，可以在本地用nginx做一个forward proxy，把header里的host rewrite到url里。（开始是用flask写的一个程序做这个事情，后来发现还是nginx简单）</p>
-<p>最后在浏览器里配置一下http proxy就行了。</p>
-<p>PS,</p>
-<p>heroku的免费app比较坑爹的地方是，如果一段时间inactive后，会自动关闭。</p>
-<p>最后奉上nginx的配置和示例代码：<br><a id="more"></a><br>nginx server段配置如下，其他省略，</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">server &#123;</div><div class="line">    listen       8080;</div><div class="line">    location / &#123;</div><div class="line">        resolver 223.5.5.5;</div><div class="line">        proxy_pass https://xxx.herokuapp.com/p/$http_host$uri$is_args$args;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>app.py用的flask（网络上搜索到的一个例子改了一点，用其他也是OK的）</p>
-<p>cat Procfile</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">web: python app.py</div></pre></td></tr></table></figure>
-<p>cat requirements.txt（flask已经有新版本了）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Flask==0.9</div><div class="line">Jinja2==2.6</div><div class="line">Werkzeug==0.8.3</div><div class="line">wsgiref==0.1.2</div><div class="line">requests==2.3.0</div></pre></td></tr></table></figure>
-<p>cat app.py</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div></pre></td><td class="code"><pre><div class="line"><span class="string">"""</span></div><div class="line">A simple proxy server. Usage:</div><div class="line">http://hostname:port/p/(URL to be proxied, minus protocol)</div><div class="line">For example:</div><div class="line">http://localhost:8080/p/www.google.com</div><div class="line">"""</div><div class="line"><span class="keyword">import</span> os</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, render_template, request, abort, Response, redirect</div><div class="line"><span class="keyword">from</span> werkzeug.serving <span class="keyword">import</span> WSGIRequestHandler</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">import</span> logging</div><div class="line"></div><div class="line">app = Flask(__name__.split(<span class="string">'.'</span>)[<span class="number">0</span>])</div><div class="line">logging.basicConfig(level=logging.INFO)</div><div class="line">LOG = logging.getLogger(<span class="string">"main.py"</span>)</div><div class="line"></div><div class="line"><span class="meta">@app.route('/&lt;path:url&gt;')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">root</span><span class="params">(url)</span>:</span></div><div class="line">    LOG.info(<span class="string">"Root route, path: %s"</span>, url)</div><div class="line">    <span class="comment"># If referred from a proxy request, then redirect to a URL with the proxy prefix.</span></div><div class="line">    <span class="comment"># This allows server-relative and protocol-relative URLs to work.</span></div><div class="line">    proxy_ref = proxy_ref_info(request)</div><div class="line">    <span class="keyword">if</span> proxy_ref:</div><div class="line">        redirect_url = <span class="string">"%s/%s%s"</span> % (proxy_ref[<span class="number">0</span>], url, (<span class="string">"?"</span> + request.query_string <span class="keyword">if</span> request.query_string <span class="keyword">else</span> <span class="string">""</span>))</div><div class="line">        LOG.info(<span class="string">"Redirecting referred URL to: %s"</span>, redirect_url)</div><div class="line">        <span class="keyword">return</span> proxy(redirect_url)</div><div class="line">    abort(<span class="number">404</span>)</div><div class="line"></div><div class="line"></div><div class="line"><span class="meta">@app.route('/p/&lt;path:url&gt;')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">proxy</span><span class="params">(url)</span>:</span></div><div class="line">    <span class="string">"""Fetches the specified URL and streams it out to the client.</span></div><div class="line"></div><div class="line">    If the request was referred by the proxy itself (e.g. this is an image fetch for</div><div class="line">    a previously proxied HTML page), then the original Referer is passed."""</div><div class="line">    r = get_source_rsp(url)</div><div class="line">    LOG.info(<span class="string">"Got %s response from %s"</span>,r.status_code, url)</div><div class="line">    headers = dict(r.headers)</div><div class="line">    <span class="keyword">if</span> headers.has_key(<span class="string">'transfer-encoding'</span>):</div><div class="line">        <span class="keyword">del</span>(headers[<span class="string">'transfer-encoding'</span>])</div><div class="line">    <span class="keyword">if</span> headers.has_key(<span class="string">'content-encoding'</span>):</div><div class="line">        <span class="keyword">del</span>(headers[<span class="string">'content-encoding'</span>])</div><div class="line">    <span class="keyword">return</span> Response(r.content, headers = headers)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_source_rsp</span><span class="params">(url)</span>:</span></div><div class="line">        url = <span class="string">'http://%s'</span> % url</div><div class="line">        LOG.info(<span class="string">"Fetching %s"</span>, url)</div><div class="line">        <span class="comment"># Pass original Referer for subsequent resource requests</span></div><div class="line">        proxy_ref = proxy_ref_info(request)</div><div class="line">        headers = &#123; <span class="string">"Referer"</span> : <span class="string">"http://%s/%s"</span> % (proxy_ref[<span class="number">0</span>], proxy_ref[<span class="number">1</span>])&#125; <span class="keyword">if</span> proxy_ref <span class="keyword">else</span> &#123;&#125;</div><div class="line">        <span class="comment"># Fetch the URL, and stream it back</span></div><div class="line">        LOG.info(<span class="string">"Fetching with headers: %s, %s"</span>, url, headers)</div><div class="line">        <span class="keyword">return</span> requests.get(url, stream=<span class="keyword">False</span>, params = request.args, headers=headers)</div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">split_url</span><span class="params">(url)</span>:</span></div><div class="line">    <span class="string">"""Splits the given URL into a tuple of (protocol, host, uri)"""</span></div><div class="line">    proto, rest = url.split(<span class="string">':'</span>, <span class="number">1</span>)</div><div class="line">    rest = rest[<span class="number">2</span>:].split(<span class="string">'/'</span>, <span class="number">1</span>)</div><div class="line">    host, uri = (rest[<span class="number">0</span>], rest[<span class="number">1</span>]) <span class="keyword">if</span> len(rest) == <span class="number">2</span> <span class="keyword">else</span> (rest[<span class="number">0</span>], <span class="string">""</span>)</div><div class="line">    <span class="keyword">return</span> (proto, host, uri)</div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">proxy_ref_info</span><span class="params">(request)</span>:</span></div><div class="line">    <span class="string">"""Parses out Referer info indicating the request is from a previously proxied page.</span></div><div class="line"></div><div class="line">    For example, if:</div><div class="line">        Referer: http://localhost:8080/p/google.com/search?q=foo</div><div class="line">    then the result is:</div><div class="line">        ("google.com", "search?q=foo")</div><div class="line">    """</div><div class="line">    ref = request.headers.get(<span class="string">'referer'</span>)</div><div class="line">    <span class="keyword">if</span> ref:</div><div class="line">        _, _, uri = split_url(ref)</div><div class="line">        <span class="keyword">if</span> uri.find(<span class="string">"/"</span>) &lt; <span class="number">0</span>:</div><div class="line">            <span class="keyword">return</span> <span class="keyword">None</span></div><div class="line">        first, rest = uri.split(<span class="string">"/"</span>, <span class="number">1</span>)</div><div class="line">        <span class="keyword">if</span> first <span class="keyword">in</span> <span class="string">"pd"</span>:</div><div class="line">            parts = rest.split(<span class="string">"/"</span>, <span class="number">1</span>)</div><div class="line">            r = (parts[<span class="number">0</span>], parts[<span class="number">1</span>]) <span class="keyword">if</span> len(parts) == <span class="number">2</span> <span class="keyword">else</span> (parts[<span class="number">0</span>], <span class="string">""</span>)</div><div class="line">            LOG.info(<span class="string">"Referred by proxy host, uri: %s, %s"</span>, r[<span class="number">0</span>], r[<span class="number">1</span>])</div><div class="line">            <span class="keyword">return</span> r</div><div class="line">    <span class="keyword">return</span> <span class="keyword">None</span></div><div class="line"></div><div class="line"><span class="meta">@app.route('/')</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello</span><span class="params">()</span>:</span></div><div class="line">    <span class="keyword">return</span> <span class="string">'Hello World!'</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="comment"># Bind to PORT if defined, otherwise default to 5000.</span></div><div class="line">    port = int(os.environ.get(<span class="string">'PORT'</span>, <span class="number">5000</span>))</div><div class="line">    WSGIRequestHandler.protocol_version = <span class="string">"HTTP/1.1"</span></div><div class="line">    app.run(host=<span class="string">'0.0.0.0'</span>, port=port, threaded=<span class="keyword">True</span>)</div></pre></td></tr></table></figure>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>localnet port，动态学习ip-mac关系，不走内核，存储在<code>MAC_Binding</code>表里。</p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>过程是这样的，<br>logic router确定了nexthop的转发端口，用<code>get_arp</code> action来查找nexthop的mac是否已经学习到（在table 66里面）。如果没有，则使用arp action（在table=24里）从转发端口广播一个arp request，logic switch会广播到它下的每一个端口，如果有arp应答，logic switch会回给logic router，logic router会执行<code>put_arp</code> action（在table=17里），同时，ovn-controller会在<code>MAC_Binding</code>表里增加一行记录。ovn-controller收到<code>MAC_Binding</code>表的更新后，添加一条flow到table=66里面。<br>涉及到的flow如下，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">table=17, n_packets=1, n_bytes=42, idle_age=65534, hard_age=65534, priority=90,arp,metadata=0x3,arp_op=2 actions=push:NXM_NX_REG0[],push:N</div><div class="line">XM_OF_ETH_SRC[],push:NXM_NX_ARP_SHA[],push:NXM_OF_ARP_SPA[],pop:NXM_NX_REG0[],pop:NXM_OF_ETH_SRC[],controller(userdata=00.00.00.01.00.00.00.00),pop:NXM_OF_ETH_SRC[],pop:NXM_NX_REG0[</div><div class="line">]</div><div class="line"></div><div class="line">table=22, n_packets=4703, n_bytes=460837, idle_age=0, hard_age=65534, priority=0,ip,metadata=0x3 actions=push:NXM_NX_REG0[],push:NXM_NX_XX</div><div class="line">REG0[96..127],pop:NXM_NX_REG0[],mod_dl_dst:00:00:00:00:00:00,resubmit(,66),pop:NXM_NX_REG0[],resubmit(,23)</div><div class="line">table=66, n_packets=4702, n_bytes=460739, idle_age=0, hard_age=65534, priority=100,reg0=0xa7f0082,reg15=0x2,metadata=0x3 actions=mod_dl_dst:f6:ba</div><div class="line">:43:3d:44:07</div><div class="line">table=23, n_packets=5876, n_bytes=575963, idle_age=630, hard_age=65534, priority=0,metadata=0x3 actions=resubmit(,24)</div><div class="line">table=24, n_packets=1, n_bytes=98, idle_age=65534, hard_age=65534, priority=100,ip,metadata=0x3,dl_dst=00:00:00:00:00:00 actions=controller(userdata=00.00.00.00.00.00.00.00.00.19.00.10.80.00.06.06.ff.ff.ff.ff.ff.ff.00.00.ff.ff.00.18.00.00.23.20.00.06.00.20.00.40.00.00.00.01.de.10.00.00.20.04.ff.ff.00.18.00.00.23.20.00.06.00.20.00.60.00.00.00.01.de.10.00.00.22.04.00.19.00.10.80.00.2a.02.00.01.00.00.00.00.00.00.ff.ff.00.10.00.00.23.20.00.0e.ff.f8.20.00.00.00)</div></pre></td></tr></table></figure>
+<p>table=17这条flow解释下（代码函数是<code>pinctrl_handle_put_mac_binding</code>），<br>执行controller这个action时，<code>reg0=arp_spa</code>，<code>dl_src=arp_sha</code>，再加上logic input port值，实现了<code>action=(put_arp(inport, arp.spa, arp.sha)</code>)，<br>后面是恢复寄存器的值。userdata的前四个字节是opcode，这里是0x01，表示opcode是<code>ACTION_OPCODE_PUT_ARP</code>。</p>
 
       
     </div>
@@ -463,7 +457,7 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
     </li>
     <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/" title="用nginx和heroku实现一个免费的http proxy">https://blog.motitan.com/2014/09/14/用nginx和heroku实现一个免费的http-proxy/</a>
+      <a href="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/" title="ovn学习-4-mac学习">https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/</a>
     </li>
     <li class="post-copyright-license">
       <strong>版权声明： </strong>
@@ -479,11 +473,13 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
       
         <div class="post-tags">
           
-            <a href="/tags/nginx/" rel="tag"># nginx</a>
+            <a href="/tags/openvswitch/" rel="tag"># openvswitch</a>
           
-            <a href="/tags/heroku/" rel="tag"># heroku</a>
+            <a href="/tags/ovn/" rel="tag"># ovn</a>
           
-            <a href="/tags/http-proxy/" rel="tag"># http proxy</a>
+            <a href="/tags/ovs/" rel="tag"># ovs</a>
+          
+            <a href="/tags/openflow/" rel="tag"># openflow</a>
           
         </div>
       
@@ -496,15 +492,15 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/08/29/ovn学习-3-流表分析/" rel="next" title="ovn学习-3-流表分析">
+                <i class="fa fa-chevron-left"></i> ovn学习-3-流表分析
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" rel="prev" title="用pylint(pyreverse)生成python代码的uml类图">
-                用pylint(pyreverse)生成python代码的uml类图 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -596,8 +592,17 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -666,6 +671,22 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析"><span class="nav-number">2.</span> <span class="nav-text">分析</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -795,9 +816,9 @@ heroku的app不能直接用作代理，因为访问heroku app大概路径是，x
 
     <script type="text/javascript">
       var disqus_shortname = 'faicker';
-      var disqus_identifier = '2014/09/14/用nginx和heroku实现一个免费的http-proxy/';
+      var disqus_identifier = '2017/08/31/ovn学习-4-mac学习/';
 
-      var disqus_title = "用nginx和heroku实现一个免费的http proxy";
+      var disqus_title = "ovn学习-4-mac学习";
 
 
       function run_disqus_script(disqus_script) {

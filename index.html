@@ -308,6 +308,173 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/08/31/ovn学习-4-mac学习/" itemprop="url">
+                  ovn学习-4-mac学习
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-31T18:00:00+08:00">
+                2017-08-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/31/ovn学习-4-mac学习/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/31/ovn学习-4-mac学习/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>localnet port，动态学习ip-mac关系，不走内核，存储在<code>MAC_Binding</code>表里。</p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>过程是这样的，<br>logic router确定了nexthop的转发端口，用<code>get_arp</code> action来查找nexthop的mac是否已经学习到（在table 66里面）。如果没有，则使用arp action（在table=24里）从转发端口广播一个arp request，logic switch会广播到它下的每一个端口，如果有arp应答，logic switch会回给logic router，logic router会执行<code>put_arp</code> action（在table=17里），同时，ovn-controller会在<code>MAC_Binding</code>表里增加一行记录。ovn-controller收到<code>MAC_Binding</code>表的更新后，添加一条flow到table=66里面。<br>涉及到的flow如下，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">table=17, n_packets=1, n_bytes=42, idle_age=65534, hard_age=65534, priority=90,arp,metadata=0x3,arp_op=2 actions=push:NXM_NX_REG0[],push:N</div><div class="line">XM_OF_ETH_SRC[],push:NXM_NX_ARP_SHA[],push:NXM_OF_ARP_SPA[],pop:NXM_NX_REG0[],pop:NXM_OF_ETH_SRC[],controller(userdata=00.00.00.01.00.00.00.00),pop:NXM_OF_ETH_SRC[],pop:NXM_NX_REG0[</div><div class="line">]</div><div class="line"></div><div class="line">table=22, n_packets=4703, n_bytes=460837, idle_age=0, hard_age=65534, priority=0,ip,metadata=0x3 actions=push:NXM_NX_REG0[],push:NXM_NX_XX</div><div class="line">REG0[96..127],pop:NXM_NX_REG0[],mod_dl_dst:00:00:00:00:00:00,resubmit(,66),pop:NXM_NX_REG0[],resubmit(,23)</div><div class="line">table=66, n_packets=4702, n_bytes=460739, idle_age=0, hard_age=65534, priority=100,reg0=0xa7f0082,reg15=0x2,metadata=0x3 actions=mod_dl_dst:f6:ba</div><div class="line">:43:3d:44:07</div><div class="line">table=23, n_packets=5876, n_bytes=575963, idle_age=630, hard_age=65534, priority=0,metadata=0x3 actions=resubmit(,24)</div><div class="line">table=24, n_packets=1, n_bytes=98, idle_age=65534, hard_age=65534, priority=100,ip,metadata=0x3,dl_dst=00:00:00:00:00:00 actions=controller(userdata=00.00.00.00.00.00.00.00.00.19.00.10.80.00.06.06.ff.ff.ff.ff.ff.ff.00.00.ff.ff.00.18.00.00.23.20.00.06.00.20.00.40.00.00.00.01.de.10.00.00.20.04.ff.ff.00.18.00.00.23.20.00.06.00.20.00.60.00.00.00.01.de.10.00.00.22.04.00.19.00.10.80.00.2a.02.00.01.00.00.00.00.00.00.ff.ff.00.10.00.00.23.20.00.0e.ff.f8.20.00.00.00)</div></pre></td></tr></table></figure>
+<p>table=17这条flow解释下（代码函数是<code>pinctrl_handle_put_mac_binding</code>），<br>执行controller这个action时，<code>reg0=arp_spa</code>，<code>dl_src=arp_sha</code>，再加上logic input port值，实现了<code>action=(put_arp(inport, arp.spa, arp.sha)</code>)，<br>后面是恢复寄存器的值。userdata的前四个字节是opcode，这里是0x01，表示opcode是<code>ACTION_OPCODE_PUT_ARP</code>。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/29/ovn学习-3-流表分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -436,7 +603,7 @@
 <p><strong>gateway router</strong>, 物理位置（chassis）绑定的。可支持<code>1-to-N</code> nat。<code>Port_Binding</code>里port type是l3gateway。比如这里的edge1。如果要在gateway router上面配置snat或者dnat规则，和distributed router连接必须通过switch。NAT rules only work on Gateway routers, and on distributed routers with one logical router port with a redirect-chassis specified.<br><strong>distributed router</strong>，<br><strong>Distributed Gateway Port</strong> is logic network gateway。</p>
 <h2 id="寄存器使用介绍"><a href="#寄存器使用介绍" class="headerlink" title="寄存器使用介绍"></a>寄存器使用介绍</h2><ol>
 <li>tunnel key</li>
-<li>logical datapath field，一个logic switch/logic router就是一个logic datapath，存储在metadata寄存器里</li>
+<li>logical datapath field，一个logic switch/logic router就是一个logic datapath，存储在metadata寄存器里(跨机器是存储在tunnel key里）</li>
 <li>logical input port field，存储在reg14里</li>
 <li>logical output port field，存储在reg15里</li>
 <li>conntrack zone field for logical ports，存储在reg13里</li>
@@ -444,7 +611,14 @@
 <li>logical flow flags，存储在reg10里</li>
 <li>VLAN ID</li>
 </ol>
-<h2 id="整体流表处理"><a href="#整体流表处理" class="headerlink" title="整体流表处理"></a>整体流表处理</h2><p>一开始，VM发出来一个包进入ovs，然后，</p>
+<p>tips,</p>
+<ul>
+<li>flow里的metadata值即是Datapath_Binding表里的tunnel_key（ovn-sbctl list Datapath_Binding）。</li>
+<li>flow里的reg14值即是Port_Binding表里的tunnel_key（ovn-sbctl list Port_Binding）。</li>
+<li>物理port（ofport）和逻辑port的转换是在本地chassis由ovn-controller完成的。</li>
+</ul>
+<h2 id="整体流表处理"><a href="#整体流表处理" class="headerlink" title="整体流表处理"></a>整体流表处理</h2><p>switch datapath主要功能是arp代答，dhcp应答，l2查找，ACL，security。<br>router datapath主要功能是网关arp代答，网关icmp代答，路由，下一跳arp解析，nat。<br>router路由和nat的顺序跟内核处理的顺序保持一致。  </p>
+<p>一开始，VM发出来一个包进入ovs，然后，</p>
 <ol>
 <li>在table 0里，匹配了in_port，做了一个物理到逻辑的转换。设置logical datapath field，logical input port，跳到table 16。如果是VM里容器发出来的包，会用vlan id来区分，并strip vlan，然后就跟上面的一样了。table 0也会处理从隧道进来的包，也会设置logical datapath field，logical input port，还会设置logical output port（因为是先知道了logical output port，再做的隧道封装），这些信息是从tun metadata获取的。然后跳到table 33。</li>
 <li>table 16到31执行sb db里<code>Logical_Flow</code>表的逻辑，ingress方向。对应<code>Logical_Flow</code>表里的table 0到15。每一条logic flow对应一条或者多条实际flow。包可能只匹配其中的一条，也可能匹配多条（action是一样的）。ovn-controller使用logic flow的UUID的前32bit作为flow里的cookie值。一些logic flow可能对应到ovs里的conjunctive match，使用的cookie值是0。大多数logic flow里的action都在openflow里有对应的实现。比如next对应resubmit。以下是一些特别的，1）output: 通过resubmit到table 32实现。如果output有多个，也会resubmit多次。2）<code>get_arp(P, A)/get_nd(P, A)</code>：通过保存一些值，resubmit到table 66实现。table 66里的flow是sb db里MAC_Binding表生成的。3） <code>put_arp(P, A, E)/put_nd(P, A, E)</code>：通过保存一些值，发送包给ovn-controller，ovn-controller会更新<code>MAC_Binding</code>表。gateway连接外部网络时学习到的。</li>
@@ -458,9 +632,10 @@
 <li><a href="http://blog.spinhirne.com/2016/09/an-introduction-to-ovn-routing.html">An Introduction to OVN Routing</a></li>
 <li><a href="http://blog.spinhirne.com/2016/09/the-ovn-gateway-router.html">The OVN Gateway Router</a></li>
 </ul>
-<h3 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">    physical network</div><div class="line">         |</div><div class="line">      outside(sw)</div><div class="line">         |          &lt;10.127.0.129/25&gt;</div><div class="line">       edge1(gr)    &lt;172.16.255.1/30&gt;</div><div class="line">         |         </div><div class="line">     transit(join sw)</div><div class="line">         |          &lt;172.16.255.2/30&gt;</div><div class="line">      tenant1(dr)   &lt;172.16.255.129/26，172.16.255.193/26&gt;</div><div class="line">     /        \</div><div class="line">  dmz(sw)    inside(sw)</div><div class="line">  /  |  \       /  \</div><div class="line">vm1 vm2 vm5   vm3 vm4</div></pre></td></tr></table></figure>
+<h3 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">    physical network</div><div class="line">         |</div><div class="line">      outside(sw)</div><div class="line">         |          &lt;10.127.0.129/25&gt;</div><div class="line">       edge1(gr)    &lt;172.16.255.1/30&gt;                     physical network</div><div class="line">         |                                                    /</div><div class="line">     transit(join sw)                                        out(sw)</div><div class="line">         |          &lt;172.16.255.2/30&gt;                        /   &lt;10.127.1.2/24&gt;       </div><div class="line">      tenant1(dr)   &lt;172.16.255.129/26，172.16.255.193/26&gt;</div><div class="line">     /        \</div><div class="line">  dmz(sw)    inside(sw)</div><div class="line">  /  |  \       /  \</div><div class="line">vm1 vm2 vm5   vm3 vm4</div></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host1，vm1（02:ac:10:ff:01:30/172.16.255.130） vm3（02:ac:10:ff:01:94/172.16.255.194） vm5（02:ac:10:ff:01:32/172.16.255.132）</div><div class="line">host2，vm2（02:ac:10:ff:01:31/172.16.255.131） vm4（02:ac:10:ff:01:95/172.16.255.195）</div></pre></td></tr></table></figure>
-<h3 id="寄存器值"><a href="#寄存器值" class="headerlink" title="寄存器值"></a>寄存器值</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">metadata = tun_id</div><div class="line">0x6 dmz</div><div class="line">0x5 inside</div><div class="line">0x4 transit</div><div class="line">0x7 tenant1</div><div class="line">0x8 outside</div><div class="line">0x3 edge1</div><div class="line"></div><div class="line">reg14,</div><div class="line">dmz,</div><div class="line">vm1 reg14=0x2</div><div class="line">vm5 reg14=0x4</div><div class="line">vm2 reg14=0x3</div><div class="line">dmz-tenant1 reg14=0x1</div><div class="line"></div><div class="line">inside,</div><div class="line">vm3 reg14=0x2</div><div class="line">vm4  reg14=0x3</div><div class="line">inside-tenant1 reg14=0x1</div><div class="line"></div><div class="line">tenant1,</div><div class="line">tenant1-transit reg14=0x3</div><div class="line">tenant1-dmz reg14=0x1</div><div class="line">tenant1-inside reg14=0x2</div><div class="line"></div><div class="line">transit,</div><div class="line">transit-tenant1, 0x2</div><div class="line">transit-edge1, 0x1</div><div class="line"></div><div class="line">edge1,</div><div class="line">edge1-outside 0x2</div><div class="line">edge1-transit 0x1</div></pre></td></tr></table></figure>
+<p>左边是中心化的router做nat，右边是分布式的router做nat。</p>
+<h3 id="寄存器值"><a href="#寄存器值" class="headerlink" title="寄存器值"></a>寄存器值</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">metadata = tun_id</div><div class="line">0x6 dmz</div><div class="line">0x5 inside</div><div class="line">0x4 transit</div><div class="line">0x7 tenant1</div><div class="line">0x8 outside</div><div class="line">0x3 edge1</div><div class="line">0x9 out</div><div class="line"></div><div class="line">reg14,</div><div class="line">dmz,</div><div class="line">vm1 reg14=0x2</div><div class="line">vm5 reg14=0x4</div><div class="line">vm2 reg14=0x3</div><div class="line">dmz-tenant1 reg14=0x1</div><div class="line"></div><div class="line">inside,</div><div class="line">vm3 reg14=0x2</div><div class="line">vm4  reg14=0x3</div><div class="line">inside-tenant1 reg14=0x1</div><div class="line"></div><div class="line">tenant1,</div><div class="line">tenant1-transit reg14=0x3</div><div class="line">tenant1-dmz reg14=0x1</div><div class="line">tenant1-inside reg14=0x2</div><div class="line"></div><div class="line">transit,</div><div class="line">transit-tenant1, 0x2</div><div class="line">transit-edge1, 0x1</div><div class="line"></div><div class="line">edge1,</div><div class="line">edge1-outside 0x2</div><div class="line">edge1-transit 0x1</div></pre></td></tr></table></figure>
 <h3 id="逻辑流表分析"><a href="#逻辑流表分析" class="headerlink" title="逻辑流表分析"></a>逻辑流表分析</h3><p>从vm1 ping vm4，<br>ovn-sbctl dump-flows，<br>dmz datapath ingress logic flow，</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">table=16，L2 安全验证。in_port和源mac是否匹配。</div><div class="line">table=17，L3 安全验证。dhcp放行，源mac和源ip是否匹配。</div><div class="line">table=18，arp/nd 安全验证。</div><div class="line">安全验证可以关闭，ovn-nbctl lsp-set-port-security</div><div class="line">table=19，pre_acl，放行dmz-tenant1进来的包，如果是local的port发出来的，则reg0[0]=1，比如vm1。</div><div class="line">table=20，pre_lb。</div><div class="line">table=21，pre_stateful。如果是reg0[0]=1，则过ct，跳到22，否则跳22。</div><div class="line">table=22，出向acl，acl是作用在整个logic datapath上的，这里是stateful的acl（from-lport drop）</div><div class="line">    ovn-nbctl acl-list dmz</div><div class="line">    from-lport     0 (udp.dst==1234) drop</div><div class="line">      to-lport   100 (tcp.dst==22) allow-related</div><div class="line">      to-lport   100 (tcp.dst==23) allow-related</div><div class="line">    drop并不是没有状态的，flow里ct_label用来做是否由于policy change导致要drop packet。</div><div class="line">table=23，qos_mark</div><div class="line">table=24，lb</div><div class="line">table=25，stateful</div><div class="line">table=26，arp response，如果是arp代答，reg10=0x1，跳32，如果是garp则next。</div><div class="line">table=27，dhcp，dhcp参数写到了flow里，送给controller，controller可以直接回。</div><div class="line">table=28，dhcp dhcp应答，跳32</div><div class="line">table=29，l2查找（整个datapath），如果是多播，设置outport是多播的(reg15=0xffff)，跳32；本地vm的单播，设置对应的outport（逻辑的，包括网关），跳32；这里reg15=0x1</div><div class="line">reg15=0xfffe, unknown</div></pre></td></tr></table></figure>
 <p>dmz datapath egress logic flow，</p>
@@ -476,193 +651,6 @@
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/08/29/ovn学习-3-流表分析/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
-                  ovn学习-2-ovsdb
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
-                2017-08-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/" itemprop="url" rel="index">
-                    <span itemprop="name">ovn</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
-                    <span itemprop="name">openvswitch</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><ul>
-<li>基于json的RPC</li>
-<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
-<li>当前ovsdb-server实现是单线程，性能很低，HA只有主备。</li>
-</ul>
-<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
-<ul>
-<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
-<li>python<br>ovsdbapp</li>
-</ul>
-<p>以下是一个ovsdbapp使用的例子，</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
-<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
-<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
-<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
-<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
-<pre><code>1. 初始时会把所有的内容返回来。
-2. 以后只会返回变化的。
-3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
-</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -897,6 +885,193 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
+                  ovn学习-2-ovsdb
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
+                2017-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><ul>
+<li>基于json的RPC</li>
+<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
+<li>当前ovsdb-server实现是单线程，性能很低，HA只有主备。</li>
+</ul>
+<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
+<ul>
+<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
+<li>python<br>ovsdbapp</li>
+</ul>
+<p>以下是一个ovsdbapp使用的例子，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
+<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
+<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
+<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
+<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
+<pre><code>1. 初始时会把所有的内容返回来。
+2. 以后只会返回变化的。
+3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
+</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1027,186 +1202,11 @@
 <p>port=2和3是两个不同用户的虚机，port=1是patch-tun。<br>table=24 arp里的源IP和port验证。<br>table=25 源mac和port验证。<br>（&lt;端口，源ip，源mac&gt;的ipv4验证在iptables里）  </p>
 <h3 id="br-tun"><a href="#br-tun" class="headerlink" title="br-tun"></a>br-tun</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line">ovs-ofctl dump-flows br-tun</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.875s, table=0, n_packets=525, n_bytes=49584, idle_age=3801, priority=1,in_port=1 actions=resubmit(,1)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62913.324s, table=0, n_packets=287, n_bytes=26502, idle_age=3801, priority=1,in_port=3 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.929s, table=0, n_packets=168, n_bytes=18211, idle_age=29027, priority=1,in_port=2 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.985s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.872s, table=1, n_packets=525, n_bytes=49584, idle_age=3801, priority=0 actions=resubmit(,2)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.983s, table=2, n_packets=27, n_bytes=1134, idle_age=4064, priority=1,arp,dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,21)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.980s, table=2, n_packets=468, n_bytes=45046, idle_age=3801, priority=0,dl_dst=00:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,20)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.978s, table=2, n_packets=30, n_bytes=3404, idle_age=65534, priority=0,dl_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.977s, table=3, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.265s, table=4, n_packets=64, n_bytes=7237, idle_age=29146, priority=1,tun_id=0x3f actions=mod_vlan_vid:1,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.257s, table=4, n_packets=366, n_bytes=35310, idle_age=3801, priority=1,tun_id=0x57 actions=mod_vlan_vid:2,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.975s, table=4, n_packets=25, n_bytes=2166, idle_age=63148, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.974s, table=6, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.853s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:7d:c0:dd actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.849s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:e9:2f:8a actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.845s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:f4:6e:4d actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.873s, table=9, n_packets=430, n_bytes=42547, idle_age=3801, priority=0 actions=resubmit(,10)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.971s, table=10, n_packets=430, n_bytes=42547, idle_age=3801, priority=1 actions=learn(table=20,hard_timeout=300,priority=1,cookie=0xa3c68d</div><div class="line">f625ec7f59,NXM_OF_VLAN_TCI[0..11],NXM_OF_ETH_DST[]=NXM_OF_ETH_SRC[],load:0-&gt;NXM_OF_VLAN_TCI[],load:NXM_NX_TUN_ID[]-&gt;NXM_NX_TUN_ID[],output:OXM_OF_IN_PORT[]),output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.916s, table=20, n_packets=92, n_bytes=9094, idle_age=29146, priority=2,dl_vlan=1,dl_dst=fa:16:3e:19:89:22 actions=strip_vlan,load:0x3f-&gt;NX</div><div class="line">M_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.166s, table=20, n_packets=0, n_bytes=0, idle_age=63881, priority=2,dl_vlan=2,dl_dst=fa:16:3e:99:f0:a5 actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.161s, table=20, n_packets=275, n_bytes=25998, idle_age=3801, priority=2,dl_vlan=2,dl_dst=fa:16:3e:5c:4c:d8 actions=strip_vlan,load:0x57-&gt;N</div><div class="line">XM_NX_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.144s, table=20, n_packets=2, n_bytes=374, idle_age=29027, priority=2,dl_vlan=2,dl_dst=fa:16:3e:9a:b9:6f actions=strip_vlan,load:0x57-&gt;NXM_</div><div class="line">NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.139s, table=20, n_packets=0, n_bytes=0, idle_age=62907, priority=2,dl_vlan=2,dl_dst=fa:16:3e:0a:23:bd actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.970s, table=20, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.918s, table=21, n_packets=2, n_bytes=84, idle_age=29151, priority=1,arp,dl_vlan=1,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e198922-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:19:89:22,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.168s, table=21, n_packets=0, n_bytes=0, idle_age=63881, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.9 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e99f0a5-&gt;NXM_NX_ARP_SHA[],load:0xc0000209-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:99:f0:a5,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.163s, table=21, n_packets=1, n_bytes=42, idle_age=4064, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.6 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e5c4<span class="built_in">cd</span>8-&gt;NXM_NX_ARP_SHA[],load:0xc0000206-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:5c:4c:d8,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.146s, table=21, n_packets=1, n_bytes=42, idle_age=29032, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e9ab96f-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:9a:b9:6f,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.141s, table=21, n_packets=0, n_bytes=0, idle_age=62907, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.1 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e0a23bd-&gt;NXM_NX_ARP_SHA[],load:0xc0000201-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:0a:23:bd,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.968s, table=21, n_packets=21, n_bytes=882, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.926s, table=22, n_packets=29, n_bytes=2026, idle_age=65534, priority=1,dl_vlan=1 actions=strip_vlan,load:0x3f-&gt;NXM_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.158s, table=22, n_packets=8, n_bytes=1144, idle_age=65534, priority=1,dl_vlan=2 actions=strip_vlan,load:0x57-&gt;NXM_NX_TUN_ID[],output:2,out</div><div class="line">put:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.967s, table=22, n_packets=14, n_bytes=1116, idle_age=65534, priority=0 actions=drop</div></pre></td></tr></table></figure>
 <p><code>port=1</code>是<code>patch-int</code>，port 2和3是vxlan接口，没有用通配tunnel。<br><code>table=0</code>是根据<code>in_port</code>分出向和入向。<br><code>table=2</code>是出向流表，按广播arp，单播，广播分发到table 21，20，22.<br><code>table=20</code>是明细的单播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=21</code>是arp代答，然后默认转22<br><code>table=22</code>是广播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=4</code>是入向，<code>tun_id</code>转成<code>vlan_id</code>，转table 9<br><code>table=9</code>，转<code>table 10</code><br><code>table=10</code>入向流表，同时有学习，在<code>table=20</code>的后面添加一条<code>priority=1</code>的对应出向的流表，类似于<code>cookie=0xa3c68df625ec7f59, duration=37.162s, table=20, n_packets=0, n_bytes=0, hard_timeout=300, idle_age=37, hard_age=0, priority=1,vlan_tci=0x0002/0x0fff,dl_dst=fa:16:3e:5c:4c:d8 actions=load:0-&gt;NXM_OF_VLAN_TCI[],load:0x57-&gt;NXM_NX_TUN_ID[],output:3</code>，其中已经有了<code>priority=2</code>一样的推送下去的flow。<br>这条规则在配置了<code>allowed-address-pair</code>（单网卡多IP，多MAC支持）里用到了mac的情况下会用到。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/06/06/python-package-and-deploy/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/06/06/python-package-and-deploy/" itemprop="url">
-                  python package and deploy
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-06T15:55:00+08:00">
-                2017-06-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index">
-                    <span itemprop="name">python</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/deploy/" itemprop="url" rel="index">
-                    <span itemprop="name">deploy</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/06/06/python-package-and-deploy/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/06/python-package-and-deploy/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>python 打包和部署对于开源项目来说，pip/pypi 就足够了。但是对于公司线上的程序部署，有各种包依赖关系，需要做到依赖包隔离，程序版本管理，部署方式一致化。使用 docker 是很流行，并且通用的方式。还有没有更轻量的方式呢？这就是本文将介绍的内容。</p>
-<p>一般来说，一个公司的线上系统版本是一致的，随系统发行版本带的 python 版本也是一致的。如果要跑不同的 python 版本，docker 是一个选择。这里讨论版本一致的情况。</p>
-<h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>用到了以下工具，</p>
+<p>tips,</p>
 <ul>
-<li><a href="https://virtualenv.pypa.io/en/stable/" target="_blank" rel="external">virtualenv</a>，包隔离</li>
-<li><a href="https://github.com/jordansissel/fpm" target="_blank" rel="external">fpm</a>，打包工具，支持打包成 rpm/deb/osxpkg 等。</li>
+<li>vlan tag是在进入br-int时，设置在ovs port上的。</li>
+<li>本地vlan区分了不同的租户，同时在转发和arp应答时，减少了flow的条数。</li>
 </ul>
-<p>用 virtualenv 来做依赖包隔离，包含了自己的程序和依赖的包；系统自带的包管理工具（centos 是 rpm）来做版本管理，实现包的更新，回退。</p>
-<h3 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h3><h4 id="fpm-安装（centos6-下为例）"><a href="#fpm-安装（centos6-下为例）" class="headerlink" title="fpm 安装（centos6 下为例）"></a>fpm 安装（centos6 下为例）</h4><ul>
-<li>安装 virtualenv-tools。<br><code>pip install virtualenv-tools</code></li>
-<li>安装 ruby（&gt;=1.9.3），用到了 <a href="https://www.softwarecollections.org/en/" target="_blank" rel="external">scl</a>。<br><code>yum install rh-ruby23-ruby rh-ruby23-ruby-devel</code><br><code>scl enable rh-ruby23 bash</code></li>
-<li>安装 fpm。<br><code>gem install fpm</code></li>
-</ul>
-<h4 id="python项目"><a href="#python项目" class="headerlink" title="python项目"></a>python项目</h4><p>可以参考 <a href="https://github.com/faicker/pychinadns" target="_blank" rel="external">pychinadns</a>，需要写 setup.py。</p>
-<h4 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h4><p><code>fpm --verbose -f -v 0.1.0 -n flowcleaner -s virtualenv -t rpm --virtualenv-pypi http://mirrors.aliyun.com/pypi/simple flowcleaner/</code><br>-s 指定源类型，-t 指定目标类型，-n 指定包名，flowcleaner/ 是项目目录。<br>会把整个 virtualenv 的目录打包到rpm里，virtualenv 里包含了依赖的包。</p>
-<h4 id="部署和运行"><a href="#部署和运行" class="headerlink" title="部署和运行"></a>部署和运行</h4><p>部署就是一个rpm包！跟标准的rpm包操作一样。</p>
-<p>rpm 安装时，virtualenv 默认安装在 /usr/share/python 目录下。<br>执行<code>/usr/share/python/flowcleaner/bin/python xxx.py</code>来从 virtualenv 里运行。</p>
 
           
         
@@ -1245,7 +1245,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1290,7 +1290,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-count">11</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
