@@ -308,6 +308,226 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/09/02/ovn学习-5-conntrack/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/02/ovn学习-5-conntrack/" itemprop="url">
+                  ovn学习-5-conntrack
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-02T18:00:00+08:00">
+                2017-09-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/02/ovn学习-5-conntrack/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/09/02/ovn学习-5-conntrack/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="conntrack定义"><a href="#conntrack定义" class="headerlink" title="conntrack定义"></a>conntrack定义</h2><p>ctstate：INVALID，NEW，ESTABLISHED，RELATED，UNTRACKED，SNAT，DNAT<br>ctstatus：NONE EXPECTED SEEN_REPLY ASSURED CONFIRMED<br>ctdir：ORIGINAL REPLY  </p>
+<p>解释，</p>
+<ol>
+<li>CONNECTION TRACKING FIELDS in <a href="http://openvswitch.org/support/dist-docs/ovs-fields.7.txt" target="_blank" rel="external">ovs-fields</a></li>
+<li>CONFIRMED是当这个包离开系统即是confirmed</li>
+</ol>
+<h2 id="tcp-in-conntrack"><a href="#tcp-in-conntrack" class="headerlink" title="tcp in conntrack"></a>tcp in conntrack</h2><p>TCP协议的状态有，<br><code>NONE | SYN_SENT | SYN_RECV | ESTABLISHED | FIN_WAIT | CLOSE_WAIT | LAST_ACK | TIME_WAIT | CLOSE | LISTEN</code></p>
+<p>状态含义:</p>
+<ul>
+<li>NONE:        initial state</li>
+<li>SYN_SENT:    SYN-only packet seen</li>
+<li>SYN_SENT2:   SYN-only packet seen from reply dir, simultaneous open</li>
+<li>SYN_RECV:    SYN-ACK packet seen</li>
+<li>ESTABLISHED: ACK packet seen</li>
+<li>FIN_WAIT:    FIN packet seen</li>
+<li>CLOSE_WAIT:  ACK seen (after FIN)</li>
+<li>LAST_ACK:    FIN seen (after FIN)</li>
+<li>TIME_WAIT:   last ACK seen</li>
+<li>CLOSE:       closed connection (RST)</li>
+</ul>
+<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><p>从vm1，telnet vm2 22端口《vm2里监听22》  </p>
+<pre>
+             vm1     -           host1         -        host2         -            vm2  
+syn->       syn_sent             syn_sent               syn_sent                  syn_sent->syn_recv
+syn+ack<- syn_sent-="">syn_recv  syn_recv               syn_recv                   syn_recv
+ack->       established          established            established                established
+</-></pre>
+
+<h3 id="syn包"><a href="#syn包" class="headerlink" title="syn包"></a>syn包</h3><p>在宿主机上把来自vm2的arp包drop，导致回包在L3-&gt;L2时失败。还是过了L3，会经过<code>NF_INET_LOCAL_OUT</code>。<br>vm1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 108 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 112 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 114 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm2，（这里如果没监听，看不到这条记录，应该是回了rst导致的；收到syn包，回复syn+ack包）  </p>
+<ol>
+<li><p><code>conntrack -E -e ALL</code>看到的，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[NEW] tcp      6 120 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080</div><div class="line">[UPDATE] tcp      6 60 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080</div></pre></td></tr></table></figure>
+</li>
+<li><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 57 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 use=1</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="syn-ack包"><a href="#syn-ack包" class="headerlink" title="syn+ack包"></a>syn+ack包</h3><p>在vm1里，iptables -A OUTPUT -d vm2 -p tcp –tcp-flags ACK ACK -j DROP<br>vm2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 22 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 36 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 19 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm1《收到syn+ack包，回复ack包》</p>
+<ol>
+<li><p><code>conntrack -E -e ALL</code>看到的，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[UPDATE] tcp      6 60 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098</div><div class="line">[UPDATE] tcp      6 432000 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 [ASSURED]</div></pre></td></tr></table></figure>
+</li>
+<li><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431989 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="ack包"><a href="#ack包" class="headerlink" title="ack包"></a>ack包</h3><p>vm1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431984 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431987 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431991 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431997 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure></p>
+<h2 id="tips"><a href="#tips" class="headerlink" title="tips"></a>tips</h2><ul>
+<li>udp，一来一回，就是established，再一来或者一回，就是assured。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/31/ovn学习-4-mac学习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -696,195 +916,6 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/08/22/ovn学习-1-配置同步/" itemprop="url">
-                  ovn学习-1-配置同步
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
-                2017-08-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/" itemprop="url" rel="index">
-                    <span itemprop="name">ovn</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
-                    <span itemprop="name">openvswitch</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/08/22/ovn学习-1-配置同步/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-1-配置同步/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
-<p>协议工作过程如下，</p>
-<ol>
-<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
-<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
-<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
-<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
-<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
-</ol>
-<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
-<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
-<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
-<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
-<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
-<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
-<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
-<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
-<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
-<li>VM关机，VIF从br删掉。</li>
-<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
-<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
-<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
-<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
-<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
-<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1072,7 +1103,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -1094,8 +1125,8 @@
             
               
                 
-                <a class="post-title-link" href="/2017/08/11/openstack-openvswitch流表学习/" itemprop="url">
-                  openstack-openvswitch流表学习
+                <a class="post-title-link" href="/2017/08/22/ovn学习-1-配置同步/" itemprop="url">
+                  ovn学习-1-配置同步
                 </a>
               
             
@@ -1111,8 +1142,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-11T15:55:00+08:00">
-                2017-08-11
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
+                2017-08-22
               </time>
             
 
@@ -1134,8 +1165,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/openstack/" itemprop="url" rel="index">
-                    <span itemprop="name">openstack</span>
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
                   </a>
                 </span>
 
@@ -1145,7 +1176,7 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/openstack/openvswitch/" itemprop="url" rel="index">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
                     <span itemprop="name">openvswitch</span>
                   </a>
                 </span>
@@ -1163,8 +1194,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/08/11/openstack-openvswitch流表学习/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/11/openstack-openvswitch流表学习/" itemprop="commentCount"></span>
+                <a href="/2017/08/22/ovn学习-1-配置同步/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-1-配置同步/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -1192,21 +1223,32 @@
       
         
           
-            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><code>openstack</code>版本是<code>ocata</code>，操作系统是<code>ubuntu 1604.3</code>。</p>
-<h2 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h2><p>逻辑架构图在这里</p>
-<ul>
-<li><a href="https://docs.openstack.org/ocata/networking-guide/deploy-ovs-selfservice.html#east-west-scenario-1-instances-on-the-same-network" target="_blank" rel="external">https://docs.openstack.org/ocata/networking-guide/deploy-ovs-selfservice.html#east-west-scenario-1-instances-on-the-same-network</a></li>
-</ul>
-<h2 id="flow分析"><a href="#flow分析" class="headerlink" title="flow分析"></a>flow分析</h2><p>这里只分析flow（<code>neutron</code>网络用的是<code>openvswitch+vxlan+local vlan</code>）</p>
-<h3 id="br-int"><a href="#br-int" class="headerlink" title="br-int"></a>br-int</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">ovs-ofctl dump-flows br-int</div><div class="line"> cookie=0x8035824320e90178, duration=62019.739s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=10,icmp6,in_port=2,icmp_type=136 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.721s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=10,icmp6,in_port=3,icmp_type=136 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.734s, table=0, n_packets=24, n_bytes=1008, idle_age=28257, priority=10,arp,in_port=2 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.717s, table=0, n_packets=22, n_bytes=924, idle_age=2913, priority=10,arp,in_port=3 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.744s, table=0, n_packets=99, n_bytes=10196, idle_age=28262, priority=9,in_port=2 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.726s, table=0, n_packets=366, n_bytes=36340, idle_age=2918, priority=9,in_port=3 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.987s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:7d:c0:dd actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.983s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:e9:2f:8a actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.979s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:f4:6e:4d actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62041.561s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62041.009s, table=0, n_packets=450, n_bytes=43915, idle_age=2912, priority=1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62041.013s, table=1, n_packets=0, n_bytes=0, idle_age=65534, priority=1 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62041.012s, table=2, n_packets=0, n_bytes=0, idle_age=65534, priority=1 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62041.015s, table=23, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62019.741s, table=24, n_packets=0, n_bytes=0, idle_age=62019, priority=2,icmp6,in_port=2,icmp_type=136,nd_target=fe80::f816:3eff:fe13:fea1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.723s, table=24, n_packets=0, n_bytes=0, idle_age=62019, priority=2,icmp6,in_port=3,icmp_type=136,nd_target=fe80::f816:3eff:fe1b:6be7 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.736s, table=24, n_packets=2, n_bytes=84, idle_age=28257, priority=2,arp,in_port=2,arp_spa=192.0.2.3 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.719s, table=24, n_packets=20, n_bytes=840, idle_age=2913, priority=2,arp,in_port=3,arp_spa=192.0.2.10 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62041.560s, table=24, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62019.748s, table=25, n_packets=123, n_bytes=11204, idle_age=28257, priority=2,in_port=2,dl_src=fa:16:3e:13:fe:a1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.730s, table=25, n_packets=388, n_bytes=37264, idle_age=2913, priority=2,in_port=3,dl_src=fa:16:3e:1b:6b:e7 actions=NORMAL</div></pre></td></tr></table></figure>
-<p>port=2和3是两个不同用户的虚机，port=1是patch-tun。<br>table=24 arp里的源IP和port验证。<br>table=25 源mac和port验证。<br>（&lt;端口，源ip，源mac&gt;的ipv4验证在iptables里）  </p>
-<h3 id="br-tun"><a href="#br-tun" class="headerlink" title="br-tun"></a>br-tun</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line">ovs-ofctl dump-flows br-tun</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.875s, table=0, n_packets=525, n_bytes=49584, idle_age=3801, priority=1,in_port=1 actions=resubmit(,1)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62913.324s, table=0, n_packets=287, n_bytes=26502, idle_age=3801, priority=1,in_port=3 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.929s, table=0, n_packets=168, n_bytes=18211, idle_age=29027, priority=1,in_port=2 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.985s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.872s, table=1, n_packets=525, n_bytes=49584, idle_age=3801, priority=0 actions=resubmit(,2)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.983s, table=2, n_packets=27, n_bytes=1134, idle_age=4064, priority=1,arp,dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,21)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.980s, table=2, n_packets=468, n_bytes=45046, idle_age=3801, priority=0,dl_dst=00:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,20)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.978s, table=2, n_packets=30, n_bytes=3404, idle_age=65534, priority=0,dl_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.977s, table=3, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.265s, table=4, n_packets=64, n_bytes=7237, idle_age=29146, priority=1,tun_id=0x3f actions=mod_vlan_vid:1,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.257s, table=4, n_packets=366, n_bytes=35310, idle_age=3801, priority=1,tun_id=0x57 actions=mod_vlan_vid:2,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.975s, table=4, n_packets=25, n_bytes=2166, idle_age=63148, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.974s, table=6, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.853s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:7d:c0:dd actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.849s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:e9:2f:8a actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.845s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:f4:6e:4d actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.873s, table=9, n_packets=430, n_bytes=42547, idle_age=3801, priority=0 actions=resubmit(,10)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.971s, table=10, n_packets=430, n_bytes=42547, idle_age=3801, priority=1 actions=learn(table=20,hard_timeout=300,priority=1,cookie=0xa3c68d</div><div class="line">f625ec7f59,NXM_OF_VLAN_TCI[0..11],NXM_OF_ETH_DST[]=NXM_OF_ETH_SRC[],load:0-&gt;NXM_OF_VLAN_TCI[],load:NXM_NX_TUN_ID[]-&gt;NXM_NX_TUN_ID[],output:OXM_OF_IN_PORT[]),output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.916s, table=20, n_packets=92, n_bytes=9094, idle_age=29146, priority=2,dl_vlan=1,dl_dst=fa:16:3e:19:89:22 actions=strip_vlan,load:0x3f-&gt;NX</div><div class="line">M_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.166s, table=20, n_packets=0, n_bytes=0, idle_age=63881, priority=2,dl_vlan=2,dl_dst=fa:16:3e:99:f0:a5 actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.161s, table=20, n_packets=275, n_bytes=25998, idle_age=3801, priority=2,dl_vlan=2,dl_dst=fa:16:3e:5c:4c:d8 actions=strip_vlan,load:0x57-&gt;N</div><div class="line">XM_NX_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.144s, table=20, n_packets=2, n_bytes=374, idle_age=29027, priority=2,dl_vlan=2,dl_dst=fa:16:3e:9a:b9:6f actions=strip_vlan,load:0x57-&gt;NXM_</div><div class="line">NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.139s, table=20, n_packets=0, n_bytes=0, idle_age=62907, priority=2,dl_vlan=2,dl_dst=fa:16:3e:0a:23:bd actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.970s, table=20, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.918s, table=21, n_packets=2, n_bytes=84, idle_age=29151, priority=1,arp,dl_vlan=1,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e198922-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:19:89:22,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.168s, table=21, n_packets=0, n_bytes=0, idle_age=63881, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.9 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e99f0a5-&gt;NXM_NX_ARP_SHA[],load:0xc0000209-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:99:f0:a5,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.163s, table=21, n_packets=1, n_bytes=42, idle_age=4064, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.6 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e5c4<span class="built_in">cd</span>8-&gt;NXM_NX_ARP_SHA[],load:0xc0000206-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:5c:4c:d8,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.146s, table=21, n_packets=1, n_bytes=42, idle_age=29032, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e9ab96f-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:9a:b9:6f,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.141s, table=21, n_packets=0, n_bytes=0, idle_age=62907, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.1 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e0a23bd-&gt;NXM_NX_ARP_SHA[],load:0xc0000201-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:0a:23:bd,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.968s, table=21, n_packets=21, n_bytes=882, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.926s, table=22, n_packets=29, n_bytes=2026, idle_age=65534, priority=1,dl_vlan=1 actions=strip_vlan,load:0x3f-&gt;NXM_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.158s, table=22, n_packets=8, n_bytes=1144, idle_age=65534, priority=1,dl_vlan=2 actions=strip_vlan,load:0x57-&gt;NXM_NX_TUN_ID[],output:2,out</div><div class="line">put:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.967s, table=22, n_packets=14, n_bytes=1116, idle_age=65534, priority=0 actions=drop</div></pre></td></tr></table></figure>
-<p><code>port=1</code>是<code>patch-int</code>，port 2和3是vxlan接口，没有用通配tunnel。<br><code>table=0</code>是根据<code>in_port</code>分出向和入向。<br><code>table=2</code>是出向流表，按广播arp，单播，广播分发到table 21，20，22.<br><code>table=20</code>是明细的单播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=21</code>是arp代答，然后默认转22<br><code>table=22</code>是广播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=4</code>是入向，<code>tun_id</code>转成<code>vlan_id</code>，转table 9<br><code>table=9</code>，转<code>table 10</code><br><code>table=10</code>入向流表，同时有学习，在<code>table=20</code>的后面添加一条<code>priority=1</code>的对应出向的流表，类似于<code>cookie=0xa3c68df625ec7f59, duration=37.162s, table=20, n_packets=0, n_bytes=0, hard_timeout=300, idle_age=37, hard_age=0, priority=1,vlan_tci=0x0002/0x0fff,dl_dst=fa:16:3e:5c:4c:d8 actions=load:0-&gt;NXM_OF_VLAN_TCI[],load:0x57-&gt;NXM_NX_TUN_ID[],output:3</code>，其中已经有了<code>priority=2</code>一样的推送下去的flow。<br>这条规则在配置了<code>allowed-address-pair</code>（单网卡多IP，多MAC支持）里用到了mac的情况下会用到。</p>
-<p>tips,</p>
-<ul>
-<li>vlan tag是在进入br-int时，设置在ovs port上的。</li>
-<li>本地vlan区分了不同的租户，同时在转发和arp应答时，减少了flow的条数。</li>
-</ul>
+            <h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
+<p>协议工作过程如下，</p>
+<ol>
+<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
+<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
+<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
+<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
+<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
+</ol>
+<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
+<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
+<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
+<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
+<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
+<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
+<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
+<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
+<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
+<li>VM关机，VIF从br删掉。</li>
+<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
+<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
+<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
+<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
+<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
+<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
+</ol>
 
           
         
@@ -1290,7 +1332,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1312,7 +1354,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

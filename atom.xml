@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://blog.motitan.com/"/>
-  <updated>2017-09-01T01:40:28.000Z</updated>
+  <updated>2017-09-02T05:44:07.000Z</updated>
   <id>https://blog.motitan.com/</id>
   
   <author>
@@ -14,6 +14,95 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>ovn学习-5-conntrack</title>
+    <link href="https://blog.motitan.com/2017/09/02/ovn%E5%AD%A6%E4%B9%A0-5-conntrack/"/>
+    <id>https://blog.motitan.com/2017/09/02/ovn学习-5-conntrack/</id>
+    <published>2017-09-02T10:00:00.000Z</published>
+    <updated>2017-09-02T05:44:07.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="conntrack定义"><a href="#conntrack定义" class="headerlink" title="conntrack定义"></a>conntrack定义</h2><p>ctstate：INVALID，NEW，ESTABLISHED，RELATED，UNTRACKED，SNAT，DNAT<br>ctstatus：NONE EXPECTED SEEN_REPLY ASSURED CONFIRMED<br>ctdir：ORIGINAL REPLY  </p>
+<p>解释，</p>
+<ol>
+<li>CONNECTION TRACKING FIELDS in <a href="http://openvswitch.org/support/dist-docs/ovs-fields.7.txt" target="_blank" rel="external">ovs-fields</a></li>
+<li>CONFIRMED是当这个包离开系统即是confirmed</li>
+</ol>
+<h2 id="tcp-in-conntrack"><a href="#tcp-in-conntrack" class="headerlink" title="tcp in conntrack"></a>tcp in conntrack</h2><p>TCP协议的状态有，<br><code>NONE | SYN_SENT | SYN_RECV | ESTABLISHED | FIN_WAIT | CLOSE_WAIT | LAST_ACK | TIME_WAIT | CLOSE | LISTEN</code></p>
+<p>状态含义:</p>
+<ul>
+<li>NONE:        initial state</li>
+<li>SYN_SENT:    SYN-only packet seen</li>
+<li>SYN_SENT2:   SYN-only packet seen from reply dir, simultaneous open</li>
+<li>SYN_RECV:    SYN-ACK packet seen</li>
+<li>ESTABLISHED: ACK packet seen</li>
+<li>FIN_WAIT:    FIN packet seen</li>
+<li>CLOSE_WAIT:  ACK seen (after FIN)</li>
+<li>LAST_ACK:    FIN seen (after FIN)</li>
+<li>TIME_WAIT:   last ACK seen</li>
+<li>CLOSE:       closed connection (RST)</li>
+</ul>
+<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><p>从vm1，telnet vm2 22端口《vm2里监听22》  </p>
+<pre>
+             vm1     -           host1         -        host2         -            vm2  
+syn->       syn_sent             syn_sent               syn_sent                  syn_sent->syn_recv
+syn+ack<- syn_sent-="">syn_recv  syn_recv               syn_recv                   syn_recv
+ack->       established          established            established                established
+</-></pre>
+
+<h3 id="syn包"><a href="#syn包" class="headerlink" title="syn包"></a>syn包</h3><p>在宿主机上把来自vm2的arp包drop，导致回包在L3-&gt;L2时失败。还是过了L3，会经过<code>NF_INET_LOCAL_OUT</code>。<br>vm1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 108 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 112 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 114 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm2，（这里如果没监听，看不到这条记录，应该是回了rst导致的；收到syn包，回复syn+ack包）  </p>
+<ol>
+<li><p><code>conntrack -E -e ALL</code>看到的，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[NEW] tcp      6 120 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080</div><div class="line">[UPDATE] tcp      6 60 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080</div></pre></td></tr></table></figure>
+</li>
+<li><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 57 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 use=1</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="syn-ack包"><a href="#syn-ack包" class="headerlink" title="syn+ack包"></a>syn+ack包</h3><p>在vm1里，iptables -A OUTPUT -d vm2 -p tcp –tcp-flags ACK ACK -j DROP<br>vm2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 22 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 36 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 19 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm1《收到syn+ack包，回复ack包》</p>
+<ol>
+<li><p><code>conntrack -E -e ALL</code>看到的，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[UPDATE] tcp      6 60 SYN_RECV src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098</div><div class="line">[UPDATE] tcp      6 432000 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 [ASSURED]</div></pre></td></tr></table></figure>
+</li>
+<li><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431989 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41098 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41098 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="ack包"><a href="#ack包" class="headerlink" title="ack包"></a>ack包</h3><p>vm1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431984 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure></p>
+<p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431987 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431991 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
+<p>vm2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 431997 ESTABLISHED src=172.16.255.130 dst=172.16.255.131 sport=41102 dport=22 src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41102 [ASSURED] mark=0 use=1</div></pre></td></tr></table></figure></p>
+<h2 id="tips"><a href="#tips" class="headerlink" title="tips"></a>tips</h2><ul>
+<li>udp，一来一回，就是established，再一来或者一回，就是assured。</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;conntrack定义&quot;&gt;&lt;a href=&quot;#conntrack定义&quot; class=&quot;headerlink&quot; title=&quot;conntrack定义&quot;&gt;&lt;/a&gt;conntrack定义&lt;/h2&gt;&lt;p&gt;ctstate：INVALID，NEW，ESTABLISHED，RE
+    
+    </summary>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
+    
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
+    
+      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
+    
+      <category term="conntrack" scheme="https://blog.motitan.com/tags/conntrack/"/>
+    
+      <category term="acl" scheme="https://blog.motitan.com/tags/acl/"/>
+    
+  </entry>
   
   <entry>
     <title>ovn学习-4-mac学习</title>
@@ -42,9 +131,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="openflow" scheme="https://blog.motitan.com/tags/openflow/"/>
     
@@ -185,65 +274,11 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="openflow" scheme="https://blog.motitan.com/tags/openflow/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ovn学习-1-配置同步</title>
-    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
-    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
-    <published>2017-08-22T10:00:00.000Z</published>
-    <updated>2017-08-29T12:30:51.000Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
-<p>协议工作过程如下，</p>
-<ol>
-<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
-<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
-<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
-<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
-<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
-</ol>
-<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
-<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
-<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
-<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
-<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
-<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
-<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
-<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
-<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
-<li>VM关机，VIF从br删掉。</li>
-<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
-<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
-<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
-<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
-<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
-<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
-    
-    </summary>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
-    
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
-      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
     
   </entry>
   
@@ -328,11 +363,65 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
+      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
       <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
+    
+      <category term="ovsdb" scheme="https://blog.motitan.com/tags/ovsdb/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ovn学习-1-配置同步</title>
+    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
+    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
+    <published>2017-08-22T10:00:00.000Z</published>
+    <updated>2017-08-29T12:30:51.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
+<p>协议工作过程如下，</p>
+<ol>
+<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
+<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
+<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
+<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
+<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
+</ol>
+<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
+<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
+<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
+<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
+<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
+<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
+<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
+<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
+<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
+<li>VM关机，VIF从br删掉。</li>
+<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
+<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
+<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
+<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
+<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
+<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
+    
+    </summary>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
+    
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
     
-      <category term="ovsdb" scheme="https://blog.motitan.com/tags/ovsdb/"/>
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
   </entry>
   
@@ -371,11 +460,11 @@
       <category term="openvswitch" scheme="https://blog.motitan.com/categories/openstack/openvswitch/"/>
     
     
+      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
+    
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
-    
-      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
     
       <category term="flow" scheme="https://blog.motitan.com/tags/flow/"/>
     

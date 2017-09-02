@@ -308,6 +308,184 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/08/11/openstack-openvswitch流表学习/" itemprop="url">
+                  openstack-openvswitch流表学习
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-11T15:55:00+08:00">
+                2017-08-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/openstack/" itemprop="url" rel="index">
+                    <span itemprop="name">openstack</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/openstack/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/11/openstack-openvswitch流表学习/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/11/openstack-openvswitch流表学习/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><code>openstack</code>版本是<code>ocata</code>，操作系统是<code>ubuntu 1604.3</code>。</p>
+<h2 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h2><p>逻辑架构图在这里</p>
+<ul>
+<li><a href="https://docs.openstack.org/ocata/networking-guide/deploy-ovs-selfservice.html#east-west-scenario-1-instances-on-the-same-network" target="_blank" rel="external">https://docs.openstack.org/ocata/networking-guide/deploy-ovs-selfservice.html#east-west-scenario-1-instances-on-the-same-network</a></li>
+</ul>
+<h2 id="flow分析"><a href="#flow分析" class="headerlink" title="flow分析"></a>flow分析</h2><p>这里只分析flow（<code>neutron</code>网络用的是<code>openvswitch+vxlan+local vlan</code>）</p>
+<h3 id="br-int"><a href="#br-int" class="headerlink" title="br-int"></a>br-int</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">ovs-ofctl dump-flows br-int</div><div class="line"> cookie=0x8035824320e90178, duration=62019.739s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=10,icmp6,in_port=2,icmp_type=136 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.721s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=10,icmp6,in_port=3,icmp_type=136 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.734s, table=0, n_packets=24, n_bytes=1008, idle_age=28257, priority=10,arp,in_port=2 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.717s, table=0, n_packets=22, n_bytes=924, idle_age=2913, priority=10,arp,in_port=3 actions=resubmit(,24)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.744s, table=0, n_packets=99, n_bytes=10196, idle_age=28262, priority=9,in_port=2 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.726s, table=0, n_packets=366, n_bytes=36340, idle_age=2918, priority=9,in_port=3 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.987s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:7d:c0:dd actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.983s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:e9:2f:8a actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62040.979s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=2,in_port=1,dl_src=fa:16:3f:f4:6e:4d actions=resubmit(,1)</div><div class="line"> cookie=0x8035824320e90178, duration=62041.561s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62041.009s, table=0, n_packets=450, n_bytes=43915, idle_age=2912, priority=1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62041.013s, table=1, n_packets=0, n_bytes=0, idle_age=65534, priority=1 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62041.012s, table=2, n_packets=0, n_bytes=0, idle_age=65534, priority=1 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62041.015s, table=23, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62019.741s, table=24, n_packets=0, n_bytes=0, idle_age=62019, priority=2,icmp6,in_port=2,icmp_type=136,nd_target=fe80::f816:3eff:fe13:fea1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.723s, table=24, n_packets=0, n_bytes=0, idle_age=62019, priority=2,icmp6,in_port=3,icmp_type=136,nd_target=fe80::f816:3eff:fe1b:6be7 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.736s, table=24, n_packets=2, n_bytes=84, idle_age=28257, priority=2,arp,in_port=2,arp_spa=192.0.2.3 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62019.719s, table=24, n_packets=20, n_bytes=840, idle_age=2913, priority=2,arp,in_port=3,arp_spa=192.0.2.10 actions=resubmit(,25)</div><div class="line"> cookie=0x8035824320e90178, duration=62041.560s, table=24, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0x8035824320e90178, duration=62019.748s, table=25, n_packets=123, n_bytes=11204, idle_age=28257, priority=2,in_port=2,dl_src=fa:16:3e:13:fe:a1 actions=NORMAL</div><div class="line"> cookie=0x8035824320e90178, duration=62019.730s, table=25, n_packets=388, n_bytes=37264, idle_age=2913, priority=2,in_port=3,dl_src=fa:16:3e:1b:6b:e7 actions=NORMAL</div></pre></td></tr></table></figure>
+<p>port=2和3是两个不同用户的虚机，port=1是patch-tun。<br>table=24 arp里的源IP和port验证。<br>table=25 源mac和port验证。<br>（&lt;端口，源ip，源mac&gt;的ipv4验证在iptables里）  </p>
+<h3 id="br-tun"><a href="#br-tun" class="headerlink" title="br-tun"></a>br-tun</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line">ovs-ofctl dump-flows br-tun</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.875s, table=0, n_packets=525, n_bytes=49584, idle_age=3801, priority=1,in_port=1 actions=resubmit(,1)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62913.324s, table=0, n_packets=287, n_bytes=26502, idle_age=3801, priority=1,in_port=3 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.929s, table=0, n_packets=168, n_bytes=18211, idle_age=29027, priority=1,in_port=2 actions=resubmit(,4)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.985s, table=0, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.872s, table=1, n_packets=525, n_bytes=49584, idle_age=3801, priority=0 actions=resubmit(,2)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.983s, table=2, n_packets=27, n_bytes=1134, idle_age=4064, priority=1,arp,dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,21)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.980s, table=2, n_packets=468, n_bytes=45046, idle_age=3801, priority=0,dl_dst=00:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,20)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.978s, table=2, n_packets=30, n_bytes=3404, idle_age=65534, priority=0,dl_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.977s, table=3, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.265s, table=4, n_packets=64, n_bytes=7237, idle_age=29146, priority=1,tun_id=0x3f actions=mod_vlan_vid:1,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62927.257s, table=4, n_packets=366, n_bytes=35310, idle_age=3801, priority=1,tun_id=0x57 actions=mod_vlan_vid:2,resubmit(,9)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.975s, table=4, n_packets=25, n_bytes=2166, idle_age=63148, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.974s, table=6, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=drop</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.853s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:7d:c0:dd actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.849s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:e9:2f:8a actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.845s, table=9, n_packets=0, n_bytes=0, idle_age=65534, priority=1,dl_src=fa:16:3f:f4:6e:4d actions=output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.873s, table=9, n_packets=430, n_bytes=42547, idle_age=3801, priority=0 actions=resubmit(,10)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.971s, table=10, n_packets=430, n_bytes=42547, idle_age=3801, priority=1 actions=learn(table=20,hard_timeout=300,priority=1,cookie=0xa3c68d</div><div class="line">f625ec7f59,NXM_OF_VLAN_TCI[0..11],NXM_OF_ETH_DST[]=NXM_OF_ETH_SRC[],load:0-&gt;NXM_OF_VLAN_TCI[],load:NXM_NX_TUN_ID[]-&gt;NXM_NX_TUN_ID[],output:OXM_OF_IN_PORT[]),output:1</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.916s, table=20, n_packets=92, n_bytes=9094, idle_age=29146, priority=2,dl_vlan=1,dl_dst=fa:16:3e:19:89:22 actions=strip_vlan,load:0x3f-&gt;NX</div><div class="line">M_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.166s, table=20, n_packets=0, n_bytes=0, idle_age=63881, priority=2,dl_vlan=2,dl_dst=fa:16:3e:99:f0:a5 actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.161s, table=20, n_packets=275, n_bytes=25998, idle_age=3801, priority=2,dl_vlan=2,dl_dst=fa:16:3e:5c:4c:d8 actions=strip_vlan,load:0x57-&gt;N</div><div class="line">XM_NX_TUN_ID[],output:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.144s, table=20, n_packets=2, n_bytes=374, idle_age=29027, priority=2,dl_vlan=2,dl_dst=fa:16:3e:9a:b9:6f actions=strip_vlan,load:0x57-&gt;NXM_</div><div class="line">NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.139s, table=20, n_packets=0, n_bytes=0, idle_age=62907, priority=2,dl_vlan=2,dl_dst=fa:16:3e:0a:23:bd actions=strip_vlan,load:0x57-&gt;NXM_NX</div><div class="line">_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.970s, table=20, n_packets=0, n_bytes=0, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.918s, table=21, n_packets=2, n_bytes=84, idle_age=29151, priority=1,arp,dl_vlan=1,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e198922-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:19:89:22,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.168s, table=21, n_packets=0, n_bytes=0, idle_age=63881, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.9 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e99f0a5-&gt;NXM_NX_ARP_SHA[],load:0xc0000209-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:99:f0:a5,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.163s, table=21, n_packets=1, n_bytes=42, idle_age=4064, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.6 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e5c4<span class="built_in">cd</span>8-&gt;NXM_NX_ARP_SHA[],load:0xc0000206-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:5c:4c:d8,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.146s, table=21, n_packets=1, n_bytes=42, idle_age=29032, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.2 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move</div><div class="line">:NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e9ab96f-&gt;NXM_NX_ARP_SHA[],load:0xc0000202-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH</div><div class="line">_DST[],mod_dl_src:fa:16:3e:9a:b9:6f,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.141s, table=21, n_packets=0, n_bytes=0, idle_age=62907, priority=1,arp,dl_vlan=2,arp_tpa=192.0.2.1 actions=load:0x2-&gt;NXM_OF_ARP_OP[],move:</div><div class="line">NXM_NX_ARP_SHA[]-&gt;NXM_NX_ARP_THA[],move:NXM_OF_ARP_SPA[]-&gt;NXM_OF_ARP_TPA[],load:0xfa163e0a23bd-&gt;NXM_NX_ARP_SHA[],load:0xc0000201-&gt;NXM_OF_ARP_SPA[],move:NXM_OF_ETH_SRC[]-&gt;NXM_OF_ETH_</div><div class="line">DST[],mod_dl_src:fa:16:3e:0a:23:bd,IN_PORT</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.968s, table=21, n_packets=21, n_bytes=882, idle_age=65534, priority=0 actions=resubmit(,22)</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.926s, table=22, n_packets=29, n_bytes=2026, idle_age=65534, priority=1,dl_vlan=1 actions=strip_vlan,load:0x3f-&gt;NXM_NX_TUN_ID[],output:2</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62907.158s, table=22, n_packets=8, n_bytes=1144, idle_age=65534, priority=1,dl_vlan=2 actions=strip_vlan,load:0x57-&gt;NXM_NX_TUN_ID[],output:2,out</div><div class="line">put:3</div><div class="line"> cookie=0xa3c68df625ec7f59, duration=62929.967s, table=22, n_packets=14, n_bytes=1116, idle_age=65534, priority=0 actions=drop</div></pre></td></tr></table></figure>
+<p><code>port=1</code>是<code>patch-int</code>，port 2和3是vxlan接口，没有用通配tunnel。<br><code>table=0</code>是根据<code>in_port</code>分出向和入向。<br><code>table=2</code>是出向流表，按广播arp，单播，广播分发到table 21，20，22.<br><code>table=20</code>是明细的单播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=21</code>是arp代答，然后默认转22<br><code>table=22</code>是广播flow，送到目的（匹配带<code>vlan_id</code>）<br><code>table=4</code>是入向，<code>tun_id</code>转成<code>vlan_id</code>，转table 9<br><code>table=9</code>，转<code>table 10</code><br><code>table=10</code>入向流表，同时有学习，在<code>table=20</code>的后面添加一条<code>priority=1</code>的对应出向的流表，类似于<code>cookie=0xa3c68df625ec7f59, duration=37.162s, table=20, n_packets=0, n_bytes=0, hard_timeout=300, idle_age=37, hard_age=0, priority=1,vlan_tci=0x0002/0x0fff,dl_dst=fa:16:3e:5c:4c:d8 actions=load:0-&gt;NXM_OF_VLAN_TCI[],load:0x57-&gt;NXM_NX_TUN_ID[],output:3</code>，其中已经有了<code>priority=2</code>一样的推送下去的flow。<br>这条规则在配置了<code>allowed-address-pair</code>（单网卡多IP，多MAC支持）里用到了mac的情况下会用到。</p>
+<p>tips,</p>
+<ul>
+<li>vlan tag是在进入br-int时，设置在ovs port上的。</li>
+<li>本地vlan区分了不同的租户，同时在转发和arp应答时，减少了flow的条数。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/06/06/python-package-and-deploy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1024,169 +1202,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" itemprop="url">
-                  用pylint(pyreverse)生成python代码的uml类图
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-09-21T22:39:42+08:00">
-                2014-09-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index">
-                    <span itemprop="name">python</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="pyreverse"><a href="#pyreverse" class="headerlink" title="pyreverse"></a>pyreverse</h2><p><code>pyreverse</code>能方便的生成uml类图，<code>pylint</code>里自带了<code>pyreverse</code>这个工具。</p>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
-<li>先安装graphviz</li>
-<li>pip install pylint</li>
-</ol>
-<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pyreverse -ASmy -o png /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/SocketServer.py -p SocketServer</div></pre></td></tr></table></figure>
-<h3 id="图片示例"><a href="#图片示例" class="headerlink" title="图片示例"></a>图片示例</h3>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2014/09/21/generate-uml-of-python-code-with-pylint-pyreverse/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1236,7 +1251,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1258,7 +1273,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>
