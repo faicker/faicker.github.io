@@ -73,7 +73,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openvswitch,ovs,ovn,conntrack,acl," />
+  <meta name="keywords" content="openvswitch,ovn,ovs,conntrack,acl," />
 
 
 
@@ -105,7 +105,7 @@ CONFIRMED是">
 
 CONNECTION TRACKING FIELDS in ovs-fields
 CONFIRMED是">
-<meta property="og:updated_time" content="2017-09-02T05:44:07.000Z">
+<meta property="og:updated_time" content="2017-09-02T06:07:10.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ovn学习-5-conntrack">
 <meta name="twitter:description" content="conntrack定义ctstate：INVALID，NEW，ESTABLISHED，RELATED，UNTRACKED，SNAT，DNATctstatus：NONE EXPECTED SEEN_REPLY ASSURED CONFIRMEDctdir：ORIGINAL REPLY  
@@ -454,14 +454,41 @@ CONFIRMED是">
 <li>TIME_WAIT:   last ACK seen</li>
 <li>CLOSE:       closed connection (RST)</li>
 </ul>
-<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><p>从vm1，telnet vm2 22端口《vm2里监听22》  </p>
-<pre>
-             vm1     -           host1         -        host2         -            vm2  
-syn->       syn_sent             syn_sent               syn_sent                  syn_sent->syn_recv
-syn+ack<- syn_sent-="">syn_recv  syn_recv               syn_recv                   syn_recv
-ack->       established          established            established                established
-</-></pre>
-
+<h2 id="实例解析"><a href="#实例解析" class="headerlink" title="实例解析"></a>实例解析</h2><p>从vm1(on host1)，telnet vm2(on host2) 22端口《vm2里监听22》  </p>
+<table>
+<thead>
+<tr>
+<th>packet</th>
+<th>vm1</th>
+<th>host1</th>
+<th>host2</th>
+<th>vm2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>syn -&gt;</td>
+<td><code>syn_sent</code></td>
+<td><code>syn_sent</code></td>
+<td><code>syn_sent</code></td>
+<td><code>syn_sent -&gt; syn_recv</code></td>
+</tr>
+<tr>
+<td>syn+ack &lt;-</td>
+<td><code>syn_sent -&gt; syn_recv</code></td>
+<td><code>syn_recv</code></td>
+<td><code>syn_recv</code></td>
+<td><code>syn_recv</code></td>
+</tr>
+<tr>
+<td>ack -&gt;</td>
+<td><code>established</code></td>
+<td><code>established</code></td>
+<td><code>established</code></td>
+<td><code>established</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="syn包"><a href="#syn包" class="headerlink" title="syn包"></a>syn包</h3><p>在宿主机上把来自vm2的arp包drop，导致回包在L3-&gt;L2时失败。还是过了L3，会经过<code>NF_INET_LOCAL_OUT</code>。<br>vm1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 108 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 use=1</div></pre></td></tr></table></figure></p>
 <p>host1，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 112 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
 <p>host2，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tcp      6 114 SYN_SENT src=172.16.255.130 dst=172.16.255.131 sport=41080 dport=22 [UNREPLIED] src=172.16.255.131 dst=172.16.255.130 sport=22 dport=41080 mark=0 zone=1 use=1</div></pre></td></tr></table></figure></p>
@@ -537,9 +564,9 @@ ack->       established          established            established             
           
             <a href="/tags/openvswitch/" rel="tag"># openvswitch</a>
           
-            <a href="/tags/ovs/" rel="tag"># ovs</a>
-          
             <a href="/tags/ovn/" rel="tag"># ovn</a>
+          
+            <a href="/tags/ovs/" rel="tag"># ovs</a>
           
             <a href="/tags/conntrack/" rel="tag"># conntrack</a>
           
