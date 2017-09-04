@@ -878,6 +878,7 @@
 <li><a href="http://blog.spinhirne.com/2016/09/a-primer-on-ovn.html">A Primer on OVN</a></li>
 <li><a href="http://blog.spinhirne.com/2016/09/an-introduction-to-ovn-routing.html">An Introduction to OVN Routing</a></li>
 <li><a href="http://blog.spinhirne.com/2016/09/the-ovn-gateway-router.html">The OVN Gateway Router</a></li>
+<li>这里用的ovs 2.7.0</li>
 </ul>
 <h3 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">    physical network</div><div class="line">         |</div><div class="line">      outside(sw)</div><div class="line">         |          &lt;10.127.0.129/25&gt;</div><div class="line">       edge1(gr)    &lt;172.16.255.1/30&gt;                     physical network</div><div class="line">         |                                                    /</div><div class="line">     transit(join sw)                                        out(sw)</div><div class="line">         |          &lt;172.16.255.2/30&gt;                        /   &lt;10.127.1.2/24&gt;       </div><div class="line">      tenant1(dr)   &lt;172.16.255.129/26，172.16.255.193/26&gt;</div><div class="line">     /        \</div><div class="line">  dmz(sw)    inside(sw)</div><div class="line">  /  |  \       /  \</div><div class="line">vm1 vm2 vm5   vm3 vm4</div></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host1，vm1（02:ac:10:ff:01:30/172.16.255.130） vm3（02:ac:10:ff:01:94/172.16.255.194） vm5（02:ac:10:ff:01:32/172.16.255.132）</div><div class="line">host2，vm2（02:ac:10:ff:01:31/172.16.255.131） vm4（02:ac:10:ff:01:95/172.16.255.195）</div></pre></td></tr></table></figure>
@@ -1063,9 +1064,10 @@
       
         
           <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><ul>
+<li><a href="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg">ovn-arch</a></li>
 <li>基于json的RPC</li>
 <li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
-<li>当前ovsdb-server实现是单线程，性能很低，HA只有主备。</li>
+<li>当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。</li>
 </ul>
 <h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
 <ul>

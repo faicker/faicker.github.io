@@ -121,9 +121,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="conntrack" scheme="https://blog.motitan.com/tags/conntrack/"/>
     
@@ -158,9 +158,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="openflow" scheme="https://blog.motitan.com/tags/openflow/"/>
     
@@ -171,7 +171,7 @@
     <link href="https://blog.motitan.com/2017/08/29/ovn%E5%AD%A6%E4%B9%A0-3-%E6%B5%81%E8%A1%A8%E5%88%86%E6%9E%90/"/>
     <id>https://blog.motitan.com/2017/08/29/ovn学习-3-流表分析/</id>
     <published>2017-08-29T10:00:00.000Z</published>
-    <updated>2017-08-31T08:40:01.000Z</updated>
+    <updated>2017-09-04T02:07:38.000Z</updated>
     
     <content type="html"><![CDATA[<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p><strong>Hypervisor</strong>是运行ovs的，比如libvirtd。<br><strong>gateway</strong>，连接logic network和physical network。<br>Hypervisors和gateways都称之为<strong>chassis</strong>。<br><strong>logic network</strong>,<br><strong>Logical switches</strong>, the logical version of Ethernet switches<br><strong>Logical routers</strong>, the logical version of IP routers<br><strong>Logical datapaths</strong>, the logical version of an OpenFlow switch. Logical switches and routers are both implemented as logical datapaths<br><strong>Logical ports</strong>,</p>
 <ol>
@@ -210,6 +210,7 @@
 <li><a href="http://blog.spinhirne.com/2016/09/a-primer-on-ovn.html" target="_blank" rel="external">A Primer on OVN</a></li>
 <li><a href="http://blog.spinhirne.com/2016/09/an-introduction-to-ovn-routing.html" target="_blank" rel="external">An Introduction to OVN Routing</a></li>
 <li><a href="http://blog.spinhirne.com/2016/09/the-ovn-gateway-router.html" target="_blank" rel="external">The OVN Gateway Router</a></li>
+<li>这里用的ovs 2.7.0</li>
 </ul>
 <h3 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">    physical network</div><div class="line">         |</div><div class="line">      outside(sw)</div><div class="line">         |          &lt;10.127.0.129/25&gt;</div><div class="line">       edge1(gr)    &lt;172.16.255.1/30&gt;                     physical network</div><div class="line">         |                                                    /</div><div class="line">     transit(join sw)                                        out(sw)</div><div class="line">         |          &lt;172.16.255.2/30&gt;                        /   &lt;10.127.1.2/24&gt;       </div><div class="line">      tenant1(dr)   &lt;172.16.255.129/26，172.16.255.193/26&gt;</div><div class="line">     /        \</div><div class="line">  dmz(sw)    inside(sw)</div><div class="line">  /  |  \       /  \</div><div class="line">vm1 vm2 vm5   vm3 vm4</div></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">host1，vm1（02:ac:10:ff:01:30/172.16.255.130） vm3（02:ac:10:ff:01:94/172.16.255.194） vm5（02:ac:10:ff:01:32/172.16.255.132）</div><div class="line">host2，vm2（02:ac:10:ff:01:31/172.16.255.131） vm4（02:ac:10:ff:01:95/172.16.255.195）</div></pre></td></tr></table></figure>
@@ -274,6 +275,7 @@
 &lt;li&gt;&lt;a href=&quot;http://blog.spinhirne.com/2016/09/a-primer-on-ovn.html&quot;&gt;A Primer on OVN&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;http://blog.spinhirne.com/2016/09/an-introduction-to-ovn-routing.html&quot;&gt;An Introduction to OVN Routing&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;http://blog.spinhirne.com/2016/09/the-ovn-gateway-router.html&quot;&gt;The OVN Gateway Router&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;这里用的ovs 2.7.0&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&quot;拓扑&quot;&gt;&lt;a href=&quot;#拓扑&quot; class=&quot;headerlink&quot; title=&quot;拓扑&quot;&gt;&lt;/a&gt;拓扑&lt;/h3&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;3&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;5&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;6&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;7&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;8&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;9&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;10&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;11&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;12&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;13&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;    physical network&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;         |&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;      outside(sw)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;         |          &amp;lt;10.127.0.129/25&amp;gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;       edge1(gr)    &amp;lt;172.16.255.1/30&amp;gt;                     physical network&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;         |                                                    /&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;     transit(join sw)                                        out(sw)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;         |          &amp;lt;172.16.255.2/30&amp;gt;                        /   &amp;lt;10.127.1.2/24&amp;gt;       &lt;/div&gt;&lt;div class=&quot;line&quot;&gt;      tenant1(dr)   &amp;lt;172.16.255.129/26，172.16.255.193/26&amp;gt;&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;     /        \&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;  dmz(sw)    inside(sw)&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;  /  |  \       /  \&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;vm1 vm2 vm5   vm3 vm4&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
 &lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;2&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;host1，vm1（02:ac:10:ff:01:30/172.16.255.130） vm3（02:ac:10:ff:01:94/172.16.255.194） vm5（02:ac:10:ff:01:32/172.16.255.132）&lt;/div&gt;&lt;div class=&quot;line&quot;&gt;host2，vm2（02:ac:10:ff:01:31/172.16.255.131） vm4（02:ac:10:ff:01:95/172.16.255.195）&lt;/div&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
@@ -301,9 +303,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="openflow" scheme="https://blog.motitan.com/tags/openflow/"/>
     
@@ -314,12 +316,13 @@
     <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2-ovsdb/"/>
     <id>https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/</id>
     <published>2017-08-22T10:00:00.000Z</published>
-    <updated>2017-08-29T12:31:00.000Z</updated>
+    <updated>2017-09-04T02:06:48.000Z</updated>
     
     <content type="html"><![CDATA[<h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><ul>
+<li><a href="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg" target="_blank" rel="external">ovn-arch</a></li>
 <li>基于json的RPC</li>
 <li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt" target="_blank" rel="external">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
-<li>当前ovsdb-server实现是单线程，性能很低，HA只有主备。</li>
+<li>当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。</li>
 </ul>
 <h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
 <ul>
@@ -361,9 +364,10 @@
     <summary type="html">
     
       &lt;h2 id=&quot;ovsdb协议&quot;&gt;&lt;a href=&quot;#ovsdb协议&quot; class=&quot;headerlink&quot; title=&quot;ovsdb协议&quot;&gt;&lt;/a&gt;ovsdb协议&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg&quot;&gt;ovn-arch&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;基于json的RPC&lt;/li&gt;
 &lt;li&gt;协议定义参考 &lt;a href=&quot;https://www.rfc-editor.org/rfc/rfc7047.txt&quot;&gt;https://www.rfc-editor.org/rfc/rfc7047.txt&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;当前ovsdb-server实现是单线程，性能很低，HA只有主备。&lt;/li&gt;
+&lt;li&gt;当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&quot;client库&quot;&gt;&lt;a href=&quot;#client库&quot; class=&quot;headerlink&quot; title=&quot;client库&quot;&gt;&lt;/a&gt;client库&lt;/h2&gt;&lt;p&gt;自带 C 和 Python的。其他开源的库有&lt;/p&gt;
 &lt;ul&gt;
@@ -390,9 +394,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
       <category term="ovsdb" scheme="https://blog.motitan.com/tags/ovsdb/"/>
     
@@ -446,9 +450,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
     
   </entry>
   
@@ -487,11 +491,11 @@
       <category term="openvswitch" scheme="https://blog.motitan.com/categories/openstack/openvswitch/"/>
     
     
+      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
+    
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
-    
-      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
     
       <category term="flow" scheme="https://blog.motitan.com/tags/flow/"/>
     
