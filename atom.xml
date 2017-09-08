@@ -312,60 +312,6 @@
   </entry>
   
   <entry>
-    <title>ovn学习-1-配置同步</title>
-    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
-    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
-    <published>2017-08-22T10:00:00.000Z</published>
-    <updated>2017-08-29T12:30:51.000Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
-<p>协议工作过程如下，</p>
-<ol>
-<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
-<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
-<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
-<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
-<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
-</ol>
-<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
-<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
-<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
-<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
-<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
-<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
-<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
-<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
-<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
-<li>VM关机，VIF从br删掉。</li>
-<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
-<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
-<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
-<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
-<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
-<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
-    
-    </summary>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
-    
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
-      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
-    
-  </entry>
-  
-  <entry>
     <title>ovn学习-2-ovsdb</title>
     <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2-ovsdb/"/>
     <id>https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/</id>
@@ -453,6 +399,60 @@
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
     
       <category term="ovsdb" scheme="https://blog.motitan.com/tags/ovsdb/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ovn学习-1-配置同步</title>
+    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
+    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
+    <published>2017-08-22T10:00:00.000Z</published>
+    <updated>2017-08-29T12:30:51.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
+<p>协议工作过程如下，</p>
+<ol>
+<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
+<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
+<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
+<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
+<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
+</ol>
+<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
+<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
+<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
+<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
+<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
+<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
+<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
+<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
+<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
+<li>VM关机，VIF从br删掉。</li>
+<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
+<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
+<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
+<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
+<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
+<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
+    
+    </summary>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
+    
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
+    
+      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
     
   </entry>
   
@@ -551,7 +551,7 @@
     <link href="https://blog.motitan.com/2017/04/15/python%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7%E4%B9%8Bpyflame/"/>
     <id>https://blog.motitan.com/2017/04/15/python性能分析工具之pyflame/</id>
     <published>2017-04-15T14:30:00.000Z</published>
-    <updated>2017-04-16T04:01:53.000Z</updated>
+    <updated>2017-09-08T06:24:58.000Z</updated>
     
     <content type="html"><![CDATA[<p>这篇文章<a href="http://www.cnblogs.com/xybaby/p/6510941.html" target="_blank" rel="external">python性能优化</a>总结的比较好，可以先看这篇的介绍。</p>
 <p>里面介绍了针对不同场景使用的工具，</p>
@@ -573,12 +573,15 @@
 <li><p>编译，</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">scl <span class="built_in">enable</span> devtoolset-3 bash</div><div class="line">scl <span class="built_in">enable</span> autotools-latest bash</div><div class="line">./autogen.sh</div><div class="line">./configure</div><div class="line">make</div></pre></td></tr></table></figure>
 </li>
+<li><p><code>pyflame -s 10 12345 | flamegraph.pl &gt; myprofile.svg</code></p>
+</li>
 </ol>
 <p>Enjoy.</p>
 <p>注意点：</p>
 <ul>
-<li>profile eventlet程序时，要把结果里出现次数最多（比采样次数还多）的tpool.py:tworker:75的堆栈删掉。</li>
+<li>profile eventlet程序时，要把pyflame结果里出现次数最多（比采样次数还多）的tpool.py:tworker:75的堆栈删掉。</li>
 <li>svg文件可以用浏览器比如chrome打开。</li>
+<li>官方版本已经把centos6的支持合进去了（centos 6可以用1.5.2，后面的版本有点问题）</li>
 </ul>
 ]]></content>
     

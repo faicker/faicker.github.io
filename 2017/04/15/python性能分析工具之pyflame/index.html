@@ -103,7 +103,7 @@
 里面介绍了针对不同场景使用的工具，
 
 对于python程序，比较出名的profile工具有三个：profile、cprofile和hotshot。其中profile是纯python语言实现的，Cprofile将profile的部分实现native化，hotshot也是C语言实现，hotshot与Cprofile的区别在于：hotsho">
-<meta property="og:updated_time" content="2017-04-16T04:01:53.000Z">
+<meta property="og:updated_time" content="2017-09-08T06:24:58.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="python性能分析工具之pyflame">
 <meta name="twitter:description" content="这篇文章python性能优化总结的比较好，可以先看这篇的介绍。
@@ -462,12 +462,15 @@
 <li><p>编译，</p>
  <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">scl <span class="built_in">enable</span> devtoolset-3 bash</div><div class="line">scl <span class="built_in">enable</span> autotools-latest bash</div><div class="line">./autogen.sh</div><div class="line">./configure</div><div class="line">make</div></pre></td></tr></table></figure>
 </li>
+<li><p><code>pyflame -s 10 12345 | flamegraph.pl &gt; myprofile.svg</code></p>
+</li>
 </ol>
 <p>Enjoy.</p>
 <p>注意点：</p>
 <ul>
-<li>profile eventlet程序时，要把结果里出现次数最多（比采样次数还多）的tpool.py:tworker:75的堆栈删掉。</li>
+<li>profile eventlet程序时，要把pyflame结果里出现次数最多（比采样次数还多）的tpool.py:tworker:75的堆栈删掉。</li>
 <li>svg文件可以用浏览器比如chrome打开。</li>
+<li>官方版本已经把centos6的支持合进去了（centos 6可以用1.5.2，后面的版本有点问题）</li>
 </ul>
 
       
