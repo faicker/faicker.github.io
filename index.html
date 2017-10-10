@@ -308,6 +308,194 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/10/09/trex支持nat的使用教程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/09/trex支持nat的使用教程/" itemprop="url">
+                  trex支持nat的使用教程
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-09T18:55:00+08:00">
+                2017-10-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/trex/" itemprop="url" rel="index">
+                    <span itemprop="name">trex</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/trex/nat/" itemprop="url" rel="index">
+                    <span itemprop="name">nat</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/09/trex支持nat的使用教程/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/10/09/trex支持nat的使用教程/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="编译和安装"><a href="#编译和安装" class="headerlink" title="编译和安装"></a>编译和安装</h3><p>系统：centos7<br>下载： </p>
+<ol>
+<li>官方版本，<figure class="highlight plain"><figcaption><span>https://github.com/cisco-system-traffic-generator/trex-core/archive/v2.29.tar.gz```  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"> 2. 支持nvgre版本，```https://github.com/lxu4net/trex-core/tree/feature_nvgre```  </div><div class="line"> </div><div class="line">编译trex：</div><div class="line">```bash</div><div class="line">cd linux_dpdk</div><div class="line">./b configure  (only once)</div><div class="line">./b build</div></pre></td></tr></table></figure></li>
+</ol>
+<p>可执行文件在scripts目录下面。</p>
+<h3 id="nat支持"><a href="#nat支持" class="headerlink" title="nat支持"></a>nat支持</h3><p>修改源代码，src/bp_sim.h:3455行左右，原来是，<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc(node-&gt;m_dest_ip);</div><div class="line">ipv4-&gt;updateIpDst(node-&gt;m_src_ip);</div></pre></td></tr></table></figure></p>
+<p>snat的修改（hard code了snat后的最高位是2.2.），<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc(node-&gt;m_dest_ip);</div><div class="line">ipv4-&gt;updateIpDst((node-&gt;m_src_ip &amp; <span class="number">0x0000FFFF</span>) + <span class="number">0x02020000</span>);</div></pre></td></tr></table></figure></p>
+<p>dnat的修改（hard code了dnat后的最高位是10.0.），<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc((node-&gt;m_dest_ip &amp; <span class="number">0x0000FFFF</span>) + <span class="number">0x0A000000</span>);</div><div class="line">ipv4-&gt;updateIpDst(node-&gt;m_src_ip);</div></pre></td></tr></table></figure></p>
+<p>最后重新编译。</p>
+<h3 id="trex配置文件"><a href="#trex配置文件" class="headerlink" title="trex配置文件"></a>trex配置文件</h3><p>以dnat测试为例，</p>
+<ul>
+<li>端口的配置文件，<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">```yaml</div><div class="line">- port_limit      : 2</div><div class="line">  version         : 2</div><div class="line">  port_bandwidth_gb : 10</div><div class="line">  interfaces    : [&quot;06:00.0&quot;,&quot;06:00.1&quot;]</div><div class="line">  port_info       : </div><div class="line">        - ip : 192.168.1.2</div><div class="line">          default_gw : 192.168.1.15</div><div class="line">          tunnels    :</div><div class="line">            type   : &apos;nvgre&apos;</div><div class="line">            dl_dst : &apos;68:05:CA:34:90:D4&apos;</div><div class="line">            dl_src : &apos;6C:92:BF:27:3D:72&apos;</div><div class="line">            tun_id : 6057468</div><div class="line">            tun_dst: &apos;192.168.1.15&apos;</div><div class="line">            tun_src: [ 192.168.2.1,192.168.2.2,192.168.2.3,192.168.2.4,192.168.2.5,192.168.2.6,192.168.2.7,192.168.2.8,192.168.2.9,192.168.2.10,192.168.2.11,192.168.2.12,192.168.2.13,192.168.2.14,192.168.2.15,192.168.2.16,192.168.2.17,192.168.2.18,192.168.2.19,192.168.2.20,192.168.2.21,192.168.2.22,192.168.2.23,192.168.2.24,192.168.2.25,192.168.2.26,192.168.2.27,192.168.2.28,192.168.2.29,192.168.2.30,192.168.2.31,192.168.2.32,192.168.2.33,192.168.2.34,192.168.2.35,192.168.2.36,192.168.2.37,192.168.2.38,192.168.2.39,192.168.2.40,192.168.2.41,192.168.2.42,192.168.2.43,192.168.2.44,192.168.2.45,192.168.2.46,192.168.2.47,192.168.2.48,192.168.2.49,192.168.2.50,192.168.2.51,192.168.2.52,192.168.2.53,192.168.2.54,192.168.2.55,192.168.2.56,192.168.2.57,192.168.2.58,192.168.2.59,192.168.2.60,192.168.2.61,192.168.2.62,192.168.2.63,192.168.2.64,192.168.2.65,192.168.2.66,192.168.2.67,192.168.2.68,192.168.2.69,192.168.2.70,192.168.2.71,192.168.2.72,192.168.2.73,192.168.2.74,192.168.2.75,192.168.2.76,192.168.2.77,192.168.2.78,192.168.2.79,192.168.2.80,192.168.2.81,192.168.2.82,192.168.2.83,192.168.2.84,192.168.2.85,192.168.2.86,192.168.2.87,192.168.2.88,192.168.2.89,192.168.2.90,192.168.2.91,192.168.2.92,192.168.2.93,192.168.2.94,192.168.2.95,192.168.2.96,192.168.2.97,192.168.2.98,192.168.2.99,192.168.2.100,192.168.2.101,192.168.2.102,192.168.2.103,192.168.2.104,192.168.2.105,192.168.2.106,192.168.2.107,192.168.2.108,192.168.2.109,192.168.2.110,192.168.2.111,192.168.2.112,192.168.2.113,192.168.2.114,192.168.2.115,192.168.2.116,192.168.2.117,192.168.2.118,192.168.2.119,192.168.2.120,192.168.2.121,192.168.2.122,192.168.2.123,192.168.2.124,192.168.2.125,192.168.2.126,192.168.2.127,192.168.2.128 ]</div><div class="line">        - ip : 192.168.1.3</div><div class="line">          default_gw : 192.168.1.15</div><div class="line">          tunnels    :</div><div class="line">            type   : &apos;nvgre&apos;</div><div class="line">            dl_dst : &apos;68:05:CA:34:90:D4&apos;</div><div class="line">            dl_src : &apos;6C:92:BF:27:3D:73&apos;</div><div class="line">            tun_id : 1</div><div class="line">            tun_dst: &apos;192.168.1.15&apos;</div><div class="line">            tun_src: [ 192.168.3.1,192.168.3.2,192.168.3.3,192.168.3.4,192.168.3.5,192.168.3.6,192.168.3.7,192.168.3.8,192.168.3.9,192.168.3.10,192.168.3.11,192.168.3.12,192.168.3.13,192.168.3.14,192.168.3.15,192.168.3.16,192.168.3.17,192.168.3.18,192.168.3.19,192.168.3.20,192.168.3.21,192.168.3.22,192.168.3.23,192.168.3.24,192.168.3.25,192.168.3.26,192.168.3.27,192.168.3.28,192.168.3.29,192.168.3.30,192.168.3.31,192.168.3.32,192.168.3.33,192.168.3.34,192.168.3.35,192.168.3.36,192.168.3.37,192.168.3.38,192.168.3.39,192.168.3.40,192.168.3.41,192.168.3.42,192.168.3.43,192.168.3.44,192.168.3.45,192.168.3.46,192.168.3.47,192.168.3.48,192.168.3.49,192.168.3.50,192.168.3.51,192.168.3.52,192.168.3.53,192.168.3.54,192.168.3.55,192.168.3.56,192.168.3.57,192.168.3.58,192.168.3.59,192.168.3.60,192.168.3.61,192.168.3.62,192.168.3.63,192.168.3.64,192.168.3.65,192.168.3.66,192.168.3.67,192.168.3.68,192.168.3.69,192.168.3.70,192.168.3.71,192.168.3.72,192.168.3.73,192.168.3.74,192.168.3.75,192.168.3.76,192.168.3.77,192.168.3.78,192.168.3.79,192.168.3.80,192.168.3.81,192.168.3.82,192.168.3.83,192.168.3.84,192.168.3.85,192.168.3.86,192.168.3.87,192.168.3.88,192.168.3.89,192.168.3.90,192.168.3.91,192.168.3.92,192.168.3.93,192.168.3.94,192.168.3.95,192.168.3.96,192.168.3.97,192.168.3.98,192.168.3.99,192.168.3.100,192.168.3.101,192.168.3.102,192.168.3.103,192.168.3.104,192.168.3.105,192.168.3.106,192.168.3.107,192.168.3.108,192.168.3.109,192.168.3.110,192.168.3.111,192.168.3.112,192.168.3.113,192.168.3.114,192.168.3.115,192.168.3.116,192.168.3.117,192.168.3.118,192.168.3.119,192.168.3.120,192.168.3.121,192.168.3.122,192.168.3.123,192.168.3.124,192.168.3.125,192.168.3.126,192.168.3.127,192.168.3.128 ]</div></pre></td></tr></table></figure></li>
+</ul>
+<p>其中，192.168.1.15 是nat物理机的ip地址，68:05:CA:34:90:D4 是nat物理机的mac地址。</p>
+<ul>
+<li>流的配置文件，<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">```yaml</div><div class="line">- duration : 10.0</div><div class="line">  generator :</div><div class="line">          distribution : &quot;seq&quot;</div><div class="line">          clients_start : &quot;15.0.0.1&quot;</div><div class="line">          clients_end   : &quot;15.10.255.255&quot;</div><div class="line">          servers_start : &quot;2.2.1.0&quot;</div><div class="line">          servers_end   : &quot;2.2.2.255&quot;</div><div class="line">          clients_per_gb : 201</div><div class="line">          min_clients    : 101</div><div class="line">          dual_port_mask : &quot;1.0.0.0&quot;</div><div class="line">          tcp_aging      : 0</div><div class="line">          udp_aging      : 0</div><div class="line">  cap_info :</div><div class="line">     - name: 2.pcap</div><div class="line">       cps: 20000.0</div><div class="line">       ipg : 10000</div><div class="line">       rtt : 10000</div><div class="line">       w   : 1</div></pre></td></tr></table></figure></li>
+</ul>
+<p>其中，15.x模拟的是从外网进来的源地址，2.2.模拟的是云用户的EIP地址段。10.0.模拟的是用户的内网地址段。2.pcap 是cap2/dns.pcap，可以调整这个pcap文件里来回包交互次数来达到调整pps的目的。</p>
+<h3 id="nat物理机配置"><a href="#nat物理机配置" class="headerlink" title="nat物理机配置"></a>nat物理机配置</h3><ol>
+<li>nat物理机环境搭建好。</li>
+<li>加好静态arp。 <figure class="highlight plain"><figcaption><span>-i xxx -s 192.168.1.2 6C:92:BF:27:3D:72```和```arp -i xxx -s 192.168.1.3 6C:92:BF:27:3D:73```。</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">3. 加好静态路由。```ip route add 192.168.2.0/24 via 192.168.1.2```和```ip route add 192.168.3.0/24 via 192.168.1.3```。</div><div class="line"></div><div class="line">### 运行trex</div><div class="line">```bash</div><div class="line">./t-rex-64 --checksum-offload-disable --cfg /etc/trex_cfg_dnat.yaml -m 1 -c 4 -f dnat.yaml -d 60</div></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><ol>
+<li>大量并发时，需要在<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">2. 改dnat.yaml里的cps为0.01，name改为cap2/dns.pcap，在nat物理机上抓包看来回流量。</div><div class="line">3. 流量OK后，观察trex运行完毕后是否有丢包```Total-pkt-drop```，并增大压力。可以用这个脚本观察nat物理机上哪里有丢包，```https://gist.github.com/faicker/18e0de8e5d09f0a8fa1875103aa3c638</div></pre></td></tr></table></figure></li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/09/02/ovn学习-5-conntrack/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -944,194 +1132,6 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
-                  ovn学习-2-ovsdb
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
-                2017-08-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/" itemprop="url" rel="index">
-                    <span itemprop="name">ovn</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
-                    <span itemprop="name">openvswitch</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><p><img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg" alt="ovn-arch"></p>
-<ul>
-<li>基于json的RPC</li>
-<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
-<li>当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。</li>
-</ul>
-<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
-<ul>
-<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
-<li>python<br>ovsdbapp</li>
-</ul>
-<p>以下是一个ovsdbapp使用的例子，</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
-<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
-<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
-<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
-<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
-<pre><code>1. 初始时会把所有的内容返回来。
-2. 以后只会返回变化的。
-3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
-</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1361,7 +1361,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1372,7 +1372,7 @@
             
             <div class="site-state-item site-state-categories">
               
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">分类</span>
               
             </div>
@@ -1383,7 +1383,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

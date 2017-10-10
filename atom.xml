@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://blog.motitan.com/"/>
-  <updated>2017-09-02T06:07:10.000Z</updated>
+  <updated>2017-10-10T10:02:31.000Z</updated>
   <id>https://blog.motitan.com/</id>
   
   <author>
@@ -14,6 +14,61 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>trex支持nat的使用教程</title>
+    <link href="https://blog.motitan.com/2017/10/09/trex%E6%94%AF%E6%8C%81nat%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/"/>
+    <id>https://blog.motitan.com/2017/10/09/trex支持nat的使用教程/</id>
+    <published>2017-10-09T10:55:00.000Z</published>
+    <updated>2017-10-10T10:02:31.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="编译和安装"><a href="#编译和安装" class="headerlink" title="编译和安装"></a>编译和安装</h3><p>系统：centos7<br>下载： </p>
+<ol>
+<li>官方版本，<figure class="highlight plain"><figcaption><span>https://github.com/cisco-system-traffic-generator/trex-core/archive/v2.29.tar.gz```  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"> 2. 支持nvgre版本，```https://github.com/lxu4net/trex-core/tree/feature_nvgre```  </div><div class="line"> </div><div class="line">编译trex：</div><div class="line">```bash</div><div class="line">cd linux_dpdk</div><div class="line">./b configure  (only once)</div><div class="line">./b build</div></pre></td></tr></table></figure></li>
+</ol>
+<p>可执行文件在scripts目录下面。</p>
+<h3 id="nat支持"><a href="#nat支持" class="headerlink" title="nat支持"></a>nat支持</h3><p>修改源代码，src/bp_sim.h:3455行左右，原来是，<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc(node-&gt;m_dest_ip);</div><div class="line">ipv4-&gt;updateIpDst(node-&gt;m_src_ip);</div></pre></td></tr></table></figure></p>
+<p>snat的修改（hard code了snat后的最高位是2.2.），<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc(node-&gt;m_dest_ip);</div><div class="line">ipv4-&gt;updateIpDst((node-&gt;m_src_ip &amp; <span class="number">0x0000FFFF</span>) + <span class="number">0x02020000</span>);</div></pre></td></tr></table></figure></p>
+<p>dnat的修改（hard code了dnat后的最高位是10.0.），<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ipv4-&gt;updateIpSrc((node-&gt;m_dest_ip &amp; <span class="number">0x0000FFFF</span>) + <span class="number">0x0A000000</span>);</div><div class="line">ipv4-&gt;updateIpDst(node-&gt;m_src_ip);</div></pre></td></tr></table></figure></p>
+<p>最后重新编译。</p>
+<h3 id="trex配置文件"><a href="#trex配置文件" class="headerlink" title="trex配置文件"></a>trex配置文件</h3><p>以dnat测试为例，</p>
+<ul>
+<li>端口的配置文件，<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">```yaml</div><div class="line">- port_limit      : 2</div><div class="line">  version         : 2</div><div class="line">  port_bandwidth_gb : 10</div><div class="line">  interfaces    : [&quot;06:00.0&quot;,&quot;06:00.1&quot;]</div><div class="line">  port_info       : </div><div class="line">        - ip : 192.168.1.2</div><div class="line">          default_gw : 192.168.1.15</div><div class="line">          tunnels    :</div><div class="line">            type   : &apos;nvgre&apos;</div><div class="line">            dl_dst : &apos;68:05:CA:34:90:D4&apos;</div><div class="line">            dl_src : &apos;6C:92:BF:27:3D:72&apos;</div><div class="line">            tun_id : 6057468</div><div class="line">            tun_dst: &apos;192.168.1.15&apos;</div><div class="line">            tun_src: [ 192.168.2.1,192.168.2.2,192.168.2.3,192.168.2.4,192.168.2.5,192.168.2.6,192.168.2.7,192.168.2.8,192.168.2.9,192.168.2.10,192.168.2.11,192.168.2.12,192.168.2.13,192.168.2.14,192.168.2.15,192.168.2.16,192.168.2.17,192.168.2.18,192.168.2.19,192.168.2.20,192.168.2.21,192.168.2.22,192.168.2.23,192.168.2.24,192.168.2.25,192.168.2.26,192.168.2.27,192.168.2.28,192.168.2.29,192.168.2.30,192.168.2.31,192.168.2.32,192.168.2.33,192.168.2.34,192.168.2.35,192.168.2.36,192.168.2.37,192.168.2.38,192.168.2.39,192.168.2.40,192.168.2.41,192.168.2.42,192.168.2.43,192.168.2.44,192.168.2.45,192.168.2.46,192.168.2.47,192.168.2.48,192.168.2.49,192.168.2.50,192.168.2.51,192.168.2.52,192.168.2.53,192.168.2.54,192.168.2.55,192.168.2.56,192.168.2.57,192.168.2.58,192.168.2.59,192.168.2.60,192.168.2.61,192.168.2.62,192.168.2.63,192.168.2.64,192.168.2.65,192.168.2.66,192.168.2.67,192.168.2.68,192.168.2.69,192.168.2.70,192.168.2.71,192.168.2.72,192.168.2.73,192.168.2.74,192.168.2.75,192.168.2.76,192.168.2.77,192.168.2.78,192.168.2.79,192.168.2.80,192.168.2.81,192.168.2.82,192.168.2.83,192.168.2.84,192.168.2.85,192.168.2.86,192.168.2.87,192.168.2.88,192.168.2.89,192.168.2.90,192.168.2.91,192.168.2.92,192.168.2.93,192.168.2.94,192.168.2.95,192.168.2.96,192.168.2.97,192.168.2.98,192.168.2.99,192.168.2.100,192.168.2.101,192.168.2.102,192.168.2.103,192.168.2.104,192.168.2.105,192.168.2.106,192.168.2.107,192.168.2.108,192.168.2.109,192.168.2.110,192.168.2.111,192.168.2.112,192.168.2.113,192.168.2.114,192.168.2.115,192.168.2.116,192.168.2.117,192.168.2.118,192.168.2.119,192.168.2.120,192.168.2.121,192.168.2.122,192.168.2.123,192.168.2.124,192.168.2.125,192.168.2.126,192.168.2.127,192.168.2.128 ]</div><div class="line">        - ip : 192.168.1.3</div><div class="line">          default_gw : 192.168.1.15</div><div class="line">          tunnels    :</div><div class="line">            type   : &apos;nvgre&apos;</div><div class="line">            dl_dst : &apos;68:05:CA:34:90:D4&apos;</div><div class="line">            dl_src : &apos;6C:92:BF:27:3D:73&apos;</div><div class="line">            tun_id : 1</div><div class="line">            tun_dst: &apos;192.168.1.15&apos;</div><div class="line">            tun_src: [ 192.168.3.1,192.168.3.2,192.168.3.3,192.168.3.4,192.168.3.5,192.168.3.6,192.168.3.7,192.168.3.8,192.168.3.9,192.168.3.10,192.168.3.11,192.168.3.12,192.168.3.13,192.168.3.14,192.168.3.15,192.168.3.16,192.168.3.17,192.168.3.18,192.168.3.19,192.168.3.20,192.168.3.21,192.168.3.22,192.168.3.23,192.168.3.24,192.168.3.25,192.168.3.26,192.168.3.27,192.168.3.28,192.168.3.29,192.168.3.30,192.168.3.31,192.168.3.32,192.168.3.33,192.168.3.34,192.168.3.35,192.168.3.36,192.168.3.37,192.168.3.38,192.168.3.39,192.168.3.40,192.168.3.41,192.168.3.42,192.168.3.43,192.168.3.44,192.168.3.45,192.168.3.46,192.168.3.47,192.168.3.48,192.168.3.49,192.168.3.50,192.168.3.51,192.168.3.52,192.168.3.53,192.168.3.54,192.168.3.55,192.168.3.56,192.168.3.57,192.168.3.58,192.168.3.59,192.168.3.60,192.168.3.61,192.168.3.62,192.168.3.63,192.168.3.64,192.168.3.65,192.168.3.66,192.168.3.67,192.168.3.68,192.168.3.69,192.168.3.70,192.168.3.71,192.168.3.72,192.168.3.73,192.168.3.74,192.168.3.75,192.168.3.76,192.168.3.77,192.168.3.78,192.168.3.79,192.168.3.80,192.168.3.81,192.168.3.82,192.168.3.83,192.168.3.84,192.168.3.85,192.168.3.86,192.168.3.87,192.168.3.88,192.168.3.89,192.168.3.90,192.168.3.91,192.168.3.92,192.168.3.93,192.168.3.94,192.168.3.95,192.168.3.96,192.168.3.97,192.168.3.98,192.168.3.99,192.168.3.100,192.168.3.101,192.168.3.102,192.168.3.103,192.168.3.104,192.168.3.105,192.168.3.106,192.168.3.107,192.168.3.108,192.168.3.109,192.168.3.110,192.168.3.111,192.168.3.112,192.168.3.113,192.168.3.114,192.168.3.115,192.168.3.116,192.168.3.117,192.168.3.118,192.168.3.119,192.168.3.120,192.168.3.121,192.168.3.122,192.168.3.123,192.168.3.124,192.168.3.125,192.168.3.126,192.168.3.127,192.168.3.128 ]</div></pre></td></tr></table></figure></li>
+</ul>
+<p>其中，192.168.1.15 是nat物理机的ip地址，68:05:CA:34:90:D4 是nat物理机的mac地址。</p>
+<ul>
+<li>流的配置文件，<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">```yaml</div><div class="line">- duration : 10.0</div><div class="line">  generator :</div><div class="line">          distribution : &quot;seq&quot;</div><div class="line">          clients_start : &quot;15.0.0.1&quot;</div><div class="line">          clients_end   : &quot;15.10.255.255&quot;</div><div class="line">          servers_start : &quot;2.2.1.0&quot;</div><div class="line">          servers_end   : &quot;2.2.2.255&quot;</div><div class="line">          clients_per_gb : 201</div><div class="line">          min_clients    : 101</div><div class="line">          dual_port_mask : &quot;1.0.0.0&quot;</div><div class="line">          tcp_aging      : 0</div><div class="line">          udp_aging      : 0</div><div class="line">  cap_info :</div><div class="line">     - name: 2.pcap</div><div class="line">       cps: 20000.0</div><div class="line">       ipg : 10000</div><div class="line">       rtt : 10000</div><div class="line">       w   : 1</div></pre></td></tr></table></figure></li>
+</ul>
+<p>其中，15.x模拟的是从外网进来的源地址，2.2.模拟的是云用户的EIP地址段。10.0.模拟的是用户的内网地址段。2.pcap 是cap2/dns.pcap，可以调整这个pcap文件里来回包交互次数来达到调整pps的目的。</p>
+<h3 id="nat物理机配置"><a href="#nat物理机配置" class="headerlink" title="nat物理机配置"></a>nat物理机配置</h3><ol>
+<li>nat物理机环境搭建好。</li>
+<li>加好静态arp。 <figure class="highlight plain"><figcaption><span>-i xxx -s 192.168.1.2 6C:92:BF:27:3D:72```和```arp -i xxx -s 192.168.1.3 6C:92:BF:27:3D:73```。</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">3. 加好静态路由。```ip route add 192.168.2.0/24 via 192.168.1.2```和```ip route add 192.168.3.0/24 via 192.168.1.3```。</div><div class="line"></div><div class="line">### 运行trex</div><div class="line">```bash</div><div class="line">./t-rex-64 --checksum-offload-disable --cfg /etc/trex_cfg_dnat.yaml -m 1 -c 4 -f dnat.yaml -d 60</div></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><ol>
+<li>大量并发时，需要在<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">2. 改dnat.yaml里的cps为0.01，name改为cap2/dns.pcap，在nat物理机上抓包看来回流量。</div><div class="line">3. 流量OK后，观察trex运行完毕后是否有丢包```Total-pkt-drop```，并增大压力。可以用这个脚本观察nat物理机上哪里有丢包，```https://gist.github.com/faicker/18e0de8e5d09f0a8fa1875103aa3c638</div></pre></td></tr></table></figure></li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;编译和安装&quot;&gt;&lt;a href=&quot;#编译和安装&quot; class=&quot;headerlink&quot; title=&quot;编译和安装&quot;&gt;&lt;/a&gt;编译和安装&lt;/h3&gt;&lt;p&gt;系统：centos7&lt;br&gt;下载： &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;官方版本，&lt;figure class=&quot;highli
+    
+    </summary>
+    
+      <category term="trex" scheme="https://blog.motitan.com/categories/trex/"/>
+    
+      <category term="nat" scheme="https://blog.motitan.com/categories/trex/nat/"/>
+    
+    
+      <category term="cisco" scheme="https://blog.motitan.com/tags/cisco/"/>
+    
+      <category term="trex" scheme="https://blog.motitan.com/tags/trex/"/>
+    
+      <category term="nat" scheme="https://blog.motitan.com/tags/nat/"/>
+    
+  </entry>
   
   <entry>
     <title>ovn学习-5-conntrack</title>
@@ -312,6 +367,60 @@
   </entry>
   
   <entry>
+    <title>ovn学习-1-配置同步</title>
+    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
+    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
+    <published>2017-08-22T10:00:00.000Z</published>
+    <updated>2017-08-29T12:30:51.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
+<p>协议工作过程如下，</p>
+<ol>
+<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
+<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
+<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
+<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
+<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
+</ol>
+<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
+<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
+<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
+<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
+<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
+<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
+<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
+<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
+<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
+<li>VM关机，VIF从br删掉。</li>
+<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
+<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
+<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
+<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
+<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
+<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
+    
+    </summary>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
+    
+    
+      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
+    
+      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
+    
+      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+  </entry>
+  
+  <entry>
     <title>ovn学习-2-ovsdb</title>
     <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-2-ovsdb/"/>
     <id>https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/</id>
@@ -403,60 +512,6 @@
   </entry>
   
   <entry>
-    <title>ovn学习-1-配置同步</title>
-    <link href="https://blog.motitan.com/2017/08/22/ovn%E5%AD%A6%E4%B9%A0-1-%E9%85%8D%E7%BD%AE%E5%90%8C%E6%AD%A5/"/>
-    <id>https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/</id>
-    <published>2017-08-22T10:00:00.000Z</published>
-    <updated>2017-08-29T12:30:51.000Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
-<p>协议工作过程如下，</p>
-<ol>
-<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
-<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
-<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
-<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
-<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
-</ol>
-<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
-<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
-<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
-<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
-<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
-<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
-<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
-<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
-<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
-<li>VM关机，VIF从br删掉。</li>
-<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
-<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
-<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
-<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
-<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
-<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;配置同步协议（sequence-number-protocol）&quot;&gt;&lt;a href=&quot;#配置同步协议（sequence-number-protocol）&quot; class=&quot;headerlink&quot; title=&quot;配置同步协议（sequence number proto
-    
-    </summary>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/categories/ovn/"/>
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/categories/ovn/openvswitch/"/>
-    
-    
-      <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
-    
-      <category term="ovn" scheme="https://blog.motitan.com/tags/ovn/"/>
-    
-      <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
-    
-  </entry>
-  
-  <entry>
     <title>openstack-openvswitch流表学习</title>
     <link href="https://blog.motitan.com/2017/08/11/openstack-openvswitch%E6%B5%81%E8%A1%A8%E5%AD%A6%E4%B9%A0/"/>
     <id>https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/</id>
@@ -493,9 +548,9 @@
     
       <category term="openvswitch" scheme="https://blog.motitan.com/tags/openvswitch/"/>
     
-      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
-    
       <category term="ovs" scheme="https://blog.motitan.com/tags/ovs/"/>
+    
+      <category term="openstack" scheme="https://blog.motitan.com/tags/openstack/"/>
     
       <category term="flow" scheme="https://blog.motitan.com/tags/flow/"/>
     

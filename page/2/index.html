@@ -308,6 +308,194 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="faicker">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="faicker's个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
+                  ovn学习-2-ovsdb
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-22T18:00:00+08:00">
+                2017-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/" itemprop="url" rel="index">
+                    <span itemprop="name">ovn</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ovn/openvswitch/" itemprop="url" rel="index">
+                    <span itemprop="name">openvswitch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><p><img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg" alt="ovn-arch"></p>
+<ul>
+<li>基于json的RPC</li>
+<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
+<li>当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。</li>
+</ul>
+<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
+<ul>
+<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
+<li>python<br>ovsdbapp</li>
+</ul>
+<p>以下是一个ovsdbapp使用的例子，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
+<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
+<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
+<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
+<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
+<pre><code>1. 初始时会把所有的内容返回来。
+2. 以后只会返回变化的。
+3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
+</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/11/openstack-openvswitch流表学习/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1041,167 +1229,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2014/10/19/enable-trim-of-yosemite/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="faicker">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="faicker's个人博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2014/10/19/enable-trim-of-yosemite/" itemprop="url">
-                  enable trim of yosemite
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-10-19T20:47:41+08:00">
-                2014-10-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Mac-OS-X/" itemprop="url" rel="index">
-                    <span itemprop="name">Mac OS X</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2014/10/19/enable-trim-of-yosemite/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2014/10/19/enable-trim-of-yosemite/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>步骤在这里，<a href="https://gist.github.com/return1/4058659" target="_blank" rel="external">https://gist.github.com/return1/4058659</a></p>
-<p><code>yosemite</code>, <code>MBP 2011 early</code>，三星<code>ssd 840 evo</code>亲测开启成功。</p>
-<p>命令一句一句贴到<code>terminal</code>里执行。中间会重启2次。</p>
-<p><code>yosemite</code>里有一个新的安全设置<code>kext signing</code>。如果驱动被修改，没有签名，系统将拒绝载入这个驱动，开机报错。<br>现在的方法是关闭<code>kext signing</code>机制，这个配置是存在<code>NVRAM/PRAM</code>的。关闭全局<code>kext signing</code>是有安全风险的。</p>
-<p>开启成功后，如果以后重置了<code>NVRAM/PRAM</code>，会导致开不了机，切记。所以在重置前，需要先关闭<code>trim</code>。</p>
-<p>详细的参考，包括开机报错怎么回退，</p>
-<ul>
-<li><a href="http://www.cindori.org/trim-enabler-and-yosemite/" target="_blank" rel="external">http://www.cindori.org/trim-enabler-and-yosemite/</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1251,7 +1278,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1262,7 +1289,7 @@
             
             <div class="site-state-item site-state-categories">
               
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">分类</span>
               
             </div>
@@ -1273,7 +1300,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>
