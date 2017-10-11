@@ -308,7 +308,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-2-ovsdb/">
+    <link itemprop="mainEntityOfPage" href="https://blog.motitan.com/2017/08/22/ovn学习-1-配置同步/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="faicker">
@@ -330,8 +330,8 @@
             
               
                 
-                <a class="post-title-link" href="/2017/08/22/ovn学习-2-ovsdb/" itemprop="url">
-                  ovn学习-2-ovsdb
+                <a class="post-title-link" href="/2017/08/22/ovn学习-1-配置同步/" itemprop="url">
+                  ovn学习-1-配置同步
                 </a>
               
             
@@ -399,8 +399,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/08/22/ovn学习-2-ovsdb/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-2-ovsdb/" itemprop="commentCount"></span>
+                <a href="/2017/08/22/ovn学习-1-配置同步/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/22/ovn学习-1-配置同步/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -427,34 +427,35 @@
 
       
         
-          <h2 id="ovsdb协议"><a href="#ovsdb协议" class="headerlink" title="ovsdb协议"></a>ovsdb协议</h2><p><img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-arch.jpg" alt="ovn-arch"></p>
-<ul>
-<li>基于json的RPC</li>
-<li>协议定义参考 <a href="https://www.rfc-editor.org/rfc/rfc7047.txt">https://www.rfc-editor.org/rfc/rfc7047.txt</a></li>
-<li>当前ovsdb-server(ovs 2.7.0)实现是单线程，性能很低，HA只有主备。</li>
-</ul>
-<h2 id="client库"><a href="#client库" class="headerlink" title="client库"></a>client库</h2><p>自带 C 和 Python的。其他开源的库有</p>
-<ul>
-<li>golang<br><code>https://github.com/socketplane/libovsdb/blob/master/example/play_with_ovs.go</code><br><code>https://github.com/contiv/ofnet/blob/master/ovsdbDriver/ovsdbDriver.go</code></li>
-<li>python<br>ovsdbapp</li>
-</ul>
-<p>以下是一个ovsdbapp使用的例子，</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> ovsdbapp.backend.ovs_idl <span class="keyword">import</span> connection</div><div class="line"><span class="keyword">from</span> ovsdbapp <span class="keyword">import</span> constants</div><div class="line"><span class="keyword">from</span> ovsdbapp.schema.open_vswitch <span class="keyword">import</span> impl_idl</div><div class="line"></div><div class="line"></div><div class="line">ovsdb_connection = connection.Connection(</div><div class="line">    idl=connection.OvsdbIdl.from_server(</div><div class="line">        <span class="string">'unix:/var/run/openvswitch/db.sock'</span>, <span class="string">'Open_vSwitch'</span>),</div><div class="line">    timeout=constants.DEFAULT_TIMEOUT)</div><div class="line"></div><div class="line">api = impl_idl.OvsdbIdl(ovsdb_connection)</div><div class="line">result = api.br_exists(<span class="string">"br0"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div><div class="line">result = api.del_br(<span class="string">"br1"</span>).execute(check_error=<span class="keyword">True</span>)</div><div class="line"><span class="keyword">print</span> result</div></pre></td></tr></table></figure>
-<h2 id="协议交互举例"><a href="#协议交互举例" class="headerlink" title="协议交互举例"></a>协议交互举例</h2><p>ovs-vsctl操作的是ovs db。ovs-vswitchd有monitor ovs db，ovs db的变更都会发到ovs-vswitchd。ovs-vsctl和ovs-vswitchd都是通过ovsdb-server进程（unix socket或者是tcp连接）去watch或者update db的。</p>
-<p>以<code>ovs-vsctl add-port br0 abc -- set interface abc type=internal</code>为例，<br>ovs-vsctl会在ovsdb的Port表和Interface表增加一行数据，ovs-vswitchd收到通知后，会创建接口，并且把ofport，mtu，mac，link_state等信息写入Interface表里。写入是否成功呢，还是靠的监控通知机制。</p>
-<p><code>ovs-vsctl -v</code>可以打印出ovs-vsctl和ovsdb-server详细的json rpc交互过程。</p>
-<p><code>ovsdb-client monitor tcp:127.0.0.1:6640 Interface name,ofport,external_ids --format=json</code>这个命令可以watch某些表某些字段的变更通知：</p>
-<pre><code>1. 初始时会把所有的内容返回来。
-2. 以后只会返回变化的。
-3. 注意，返回的action里有initial，delete, new不是实际协议的内容，这是处理过了的。协议里只有old和new。见rfc里的4.1.6里的解释。
-</code></pre><p>ovs-vswitchd消息处理过程如下，</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/08/22/ovn学习-2-ovsdb/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
+          
+            <h2 id="配置同步协议（sequence-number-protocol）"><a href="#配置同步协议（sequence-number-protocol）" class="headerlink" title="配置同步协议（sequence number protocol）"></a>配置同步协议（sequence number protocol）</h2><p>ovn各个进程间都是通过ovsdb交互的。怎么知道一个命令是否执行成功了呢。比如<code>ovn-nbctl -v --wait=hv acl-add dmz to-lport 100 tcp.dst==23 allow-related</code>。  </p>
+<p>协议工作过程如下，</p>
+<ol>
+<li><code>NB_Global</code>表里的<code>nb_cfg</code>加1</li>
+<li>当<code>ovn-northd</code>更新sb db时，把<code>NB_Global</code>表里的<code>nb_cfg</code>的值拷贝到<code>SB_Global</code>里。（从这里可以确认sb db是否与nb db一致）</li>
+<li>在<code>ovn-northd</code>从sb db收到确认后，更新<code>NB_Global</code>表里的<code>sb_cfg</code>，使得<code>sb_cfg=nb_cfg</code></li>
+<li>在<code>chassis</code>上的<code>ovn-controller</code>收到更新的带有<code>nb_cfg</code>的sb db时，更新ovs里的flow。当从ovs收到更新完成的消息后，在sb db里更新自己的<code>chassis</code>的<code>nb_cfg</code>的值。</li>
+<li><code>ovn-northd</code>监控sb db里<code>Chassis</code>表里的<code>nb_cfg</code>列，copy这个值到<code>NB_Global</code>表里的<code>hv_cfg</code>。（从这里可以确认是否所有的<code>hypervisor</code>跟nb db一致）</li>
+</ol>
+<h2 id="接口生命周期"><a href="#接口生命周期" class="headerlink" title="接口生命周期"></a>接口生命周期</h2><ol>
+<li>CMS（ovn-nbctl）创建逻辑接口，并更新配置。包括vif-id和mac。</li>
+<li>CMS（ovn-nbctl）更新nb db，在<code>Logical_Switch_Port</code>添加一行，指定了vif-id, mac, <code>Logical_Switch</code>的值。</li>
+<li><code>ovn-northd</code>收到db更新的通知后，更新sb db。在<code>Logical_Flow</code>表里增加flow，在Binding表里生成记录。</li>
+<li>在每一个hypervisor上，ovn-controller收到了sb db的更新通知，如果接口是down的，ovn-controller做不了很多事情。</li>
+<li>接口UP后，hypervisor（比如libvirt）把接口加入bridge，并且设置<code>external_ids:iface-id=vif-id</code>。</li>
+<li>ovn-controller收到这个iface-id通知后，更新sb db里的Binding表里的Chassis值，更新本地的flow。</li>
+<li>对于像openstack，当网络初始化好后才完全启动VM的情况，ovn-northd在知道Binding表里的Chassis值更新后，再更新<code>Logical_Switch_Port</code>里的up列。</li>
+<li>在其他hypervisor上，ovn-controller也能收到sb db（Chassis）的通知，然后知道了这个逻辑端口的物理位置，更新本地的flow。</li>
+<li>VM关机，VIF从br删掉。</li>
+<li>在VM关机的hypervisor上，ovn-controller知道VIF被删除后，删除Binding表里对应逻辑端口的Chassis值。</li>
+<li>在每一个hypervisor上，ovn-controller知道了Binding表里的逻辑端口的Chassis值被清空，意味着ovn-controller不再知道逻辑端口的物理位置了，更新本地的flow。</li>
+<li>最后，VIF或者是VM不再需要了，就可以通过CMS删掉。</li>
+<li>CMS plugin从nb db里删除<code>Logical_Switch_Port</code>表的VIF数据。</li>
+<li>ovn-northd接收到nb db更新后，更新sb db（包括<code>Logical_Flow</code>表和<code>Binding</code>表）。</li>
+<li>在每一个hypervisor上，ovn-controller接收到sb db更新后，删除或者更新本地flow。</li>
+</ol>
+
+          
         
       
     </div>
