@@ -5,7 +5,7 @@
     
   <url>
     <loc>https://blog.motitan.com/2017/10/09/trex%E6%94%AF%E6%8C%81nat%E7%9A%84%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/</loc>
-    <lastmod>2017-10-11T05:36:25.000Z</lastmod>
+    <lastmod>2017-10-11T05:48:22.000Z</lastmod>
     <data>
         <display>
         <title>trex支持nat的使用教程</title>
@@ -70,9 +70,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovs</tag>
-         
         <tag>ovn</tag>
+         
+        <tag>ovs</tag>
          
         <tag>ovsdb</tag>
          
@@ -99,9 +99,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovs</tag>
-         
         <tag>ovn</tag>
+         
+        <tag>ovs</tag>
          
         <tag>openflow</tag>
          
@@ -128,9 +128,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovs</tag>
-         
         <tag>ovn</tag>
+         
+        <tag>ovs</tag>
          
         <tag>conntrack</tag>
          
@@ -159,9 +159,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovs</tag>
-         
         <tag>ovn</tag>
+         
+        <tag>ovs</tag>
          
         <tag>openflow</tag>
          
@@ -186,11 +186,11 @@
         <title>openstack-openvswitch流表学习</title>
         <pubTime>2017-08-11T07:55:00.000Z</pubTime>
         
-        <tag>openstack</tag>
-         
         <tag>openvswitch</tag>
          
         <tag>ovs</tag>
+         
+        <tag>openstack</tag>
          
         <tag>flow</tag>
          
@@ -217,9 +217,9 @@
         
         <tag>openvswitch</tag>
          
-        <tag>ovs</tag>
-         
         <tag>ovn</tag>
+         
+        <tag>ovs</tag>
          
          
            
